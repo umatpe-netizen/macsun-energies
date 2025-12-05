@@ -1,0 +1,3275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MACSUN ENERGIES - Solar Investment Platform</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+      import { 
+        getAuth, 
+        signInWithEmailAndPassword, 
+        createUserWithEmailAndPassword, 
+        signInWithPopup, 
+        GoogleAuthProvider,
+        signOut,
+        sendEmailVerification,
+        sendPasswordResetEmail,
+        onAuthStateChanged
+      } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+      import { 
+        getFirestore,
+        collection,
+        doc,
+        setDoc,
+        getDoc,
+        updateDoc,
+        serverTimestamp,
+        query,
+        where,
+        getDocs,
+        addDoc
+      } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+      // Your updated Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyBBvZEoyxoPjTtlAD00JnJkqIB1rBGcZ4g",
+        authDomain: "macsun-energies.firebaseapp.com",
+        projectId: "macsun-energies",
+        storageBucket: "macsun-energies.firebasestorage.app",
+        messagingSenderId: "981368982920",
+        appId: "1:981368982920:web:5c74b036911acc0e213e3d"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+      const googleProvider = new GoogleAuthProvider();
+
+      window.auth = auth;
+      window.db = db;
+      window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+      window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+      window.signInWithPopup = signInWithPopup;
+      window.googleProvider = googleProvider;
+      window.signOut = signOut;
+      window.sendEmailVerification = sendEmailVerification;
+      window.sendPasswordResetEmail = sendPasswordResetEmail;
+      window.onAuthStateChanged = onAuthStateChanged;
+      window.firestore = {
+        collection, doc, setDoc, getDoc, updateDoc, serverTimestamp,
+        query, where, getDocs, addDoc
+      };
+    </script>
+    
+    <style>
+        :root {
+            --primary: #FF6B35; /* Sunrise Orange */
+            --primary-light: #FF8E53;
+            --primary-dark: #E55A2B;
+            --secondary: #004E89; /* Ocean Blue */
+            --accent: #FFD166; /* Sun Yellow */
+            --success: #06D6A0;
+            --warning: #FFD166;
+            --danger: #EF476F;
+            --dark: #073B4C;
+            --light: #F8F9FA;
+            --gray: #6C757D;
+            --light-gray: #E9ECEF;
+            --card-bg: #FFFFFF;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.12);
+            --transition: all 0.3s ease;
+            --border-radius: 16px;
+            --sidebar-width: 280px;
+        }
+
+        .dark-mode {
+            --light: #121212;
+            --dark: #FFFFFF;
+            --card-bg: #1E1E1E;
+            --gray: #B0B0B0;
+            --light-gray: #2D2D2D;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            transition: var(--transition);
+        }
+
+        body.dark-mode {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Header Styles */
+        .header {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-lg);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 4px solid var(--accent);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .menu-toggle {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 28px;
+            height: 21px;
+            cursor: pointer;
+            transition: var(--transition);
+            z-index: 1001;
+        }
+
+        .menu-toggle span {
+            height: 3px;
+            width: 100%;
+            background-color: white;
+            border-radius: 3px;
+            transition: var(--transition);
+        }
+
+        .menu-toggle.active span:nth-child(1) {
+            transform: rotate(45deg) translate(6px, 6px);
+        }
+
+        .menu-toggle.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .menu-toggle.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(6px, -6px);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: white;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--accent) 0%, var(--primary) 100%);
+            position: relative;
+            overflow: hidden;
+            animation: sunGlow 3s ease-in-out infinite alternate;
+            border: 3px solid white;
+            box-shadow: 0 0 20px rgba(255, 209, 102, 0.5);
+        }
+
+        @keyframes sunGlow {
+            0% {
+                box-shadow: 0 0 20px rgba(255, 209, 102, 0.5);
+            }
+            100% {
+                box-shadow: 0 0 30px rgba(255, 209, 102, 0.8), 0 0 40px rgba(255, 209, 102, 0.4);
+            }
+        }
+
+        .logo-icon i {
+            font-size: 24px;
+            color: var(--secondary);
+        }
+
+        .logo-text {
+            background: linear-gradient(90deg, white, var(--accent), white);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo-subtext {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            font-weight: 500;
+            margin-left: 5px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .platform-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-open {
+            background-color: var(--success);
+        }
+
+        .status-closed {
+            background-color: var(--danger);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .theme-toggle {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .theme-toggle:hover {
+            transform: rotate(30deg);
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .theme-toggle i {
+            font-size: 1.2rem;
+            color: white;
+        }
+
+        .notification {
+            position: relative;
+            cursor: pointer;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            transition: var(--transition);
+        }
+
+        .notification:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .notification i {
+            font-size: 1.2rem;
+            color: white;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: linear-gradient(135deg, var(--danger), #FF8FA3);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+            z-index: 2;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+
+        .user-profile-container {
+            position: relative;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 25px;
+            transition: var(--transition);
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .user-info:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--primary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: white;
+            max-width: 150px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-level {
+            font-size: 0.75rem;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .user-profile-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            min-width: 320px;
+            z-index: 1001;
+            margin-top: 10px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: var(--transition);
+            border: 1px solid var(--light-gray);
+            overflow: hidden;
+        }
+
+        .user-profile-dropdown.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .user-profile-header {
+            padding: 1.5rem;
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+            text-align: center;
+            position: relative;
+        }
+
+        .profile-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--primary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            color: white;
+            font-weight: 600;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .profile-name {
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .profile-email {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+        }
+
+        .profile-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+
+        .user-profile-content {
+            padding: 1.5rem;
+        }
+
+        .profile-info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .profile-info-item {
+            background: var(--light);
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .profile-info-label {
+            color: var(--gray);
+            font-size: 0.8rem;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .profile-info-value {
+            color: var(--dark);
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .profile-actions {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--light-gray);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .profile-action-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border: none;
+            background: transparent;
+            color: var(--dark);
+            cursor: pointer;
+            transition: var(--transition);
+            border-radius: 12px;
+            font-size: 0.9rem;
+            text-align: left;
+        }
+
+        .profile-action-btn:hover {
+            background: var(--light);
+        }
+
+        .profile-action-btn i {
+            width: 20px;
+            color: var(--primary);
+            font-size: 1rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: flex;
+            flex: 1;
+            position: relative;
+            min-height: calc(100vh - 80px);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: linear-gradient(135deg, var(--secondary) 0%, #003A6F 100%);
+            box-shadow: var(--shadow-lg);
+            transition: transform 0.3s ease;
+            z-index: 999;
+            overflow-y: auto;
+            border-right: 4px solid var(--accent);
+            position: fixed;
+            top: 80px;
+            left: 0;
+            bottom: 0;
+            transform: translateX(-100%);
+        }
+
+        .sidebar.active {
+            transform: translateX(0);
+        }
+
+        .menu {
+            list-style: none;
+            padding: 2rem 0;
+            width: 100%;
+        }
+
+        .menu-item {
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: var(--transition);
+            color: rgba(255, 255, 255, 0.85);
+            white-space: nowrap;
+            font-size: 0.95rem;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .menu-item.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .menu-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--accent);
+        }
+
+        .menu-item i {
+            width: 24px;
+            text-align: center;
+            flex-shrink: 0;
+            font-size: 1.1rem;
+        }
+
+        /* Content Area */
+        .content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            transition: var(--transition);
+            width: 100%;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Dashboard Styles */
+        .welcome-message {
+            margin-bottom: 2.5rem;
+        }
+
+        .welcome-message h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .welcome-message p {
+            color: var(--gray);
+            font-size: 1.1rem;
+            max-width: 600px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            border: 1px solid var(--light-gray);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-card h3 {
+            color: var(--gray);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-card .value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .change {
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 600;
+        }
+
+        .positive { color: var(--success); }
+        .negative { color: var(--danger); }
+
+        /* Investment Packages */
+        .packages-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .package-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            border: 2px solid var(--light-gray);
+            position: relative;
+        }
+
+        .package-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-light);
+        }
+
+        .package-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: linear-gradient(135deg, var(--accent), var(--primary));
+            color: white;
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            z-index: 2;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .package-header {
+            padding: 2rem;
+            background: linear-gradient(135deg, var(--secondary), #0056A3);
+            text-align: center;
+            position: relative;
+        }
+
+        .package-icon {
+            width: 70px;
+            height: 70px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+        }
+
+        .package-icon i {
+            font-size: 1.8rem;
+            color: var(--accent);
+        }
+
+        .package-title {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .package-subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.95rem;
+        }
+
+        .package-content {
+            padding: 2rem;
+        }
+
+        .package-features {
+            margin: 1.5rem 0;
+        }
+
+        .package-feature {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            color: var(--dark);
+            font-size: 0.95rem;
+        }
+
+        .package-feature i {
+            color: var(--success);
+            font-size: 0.9rem;
+        }
+
+        .package-price {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-align: center;
+            margin: 1.5rem 0;
+        }
+
+        .package-price span {
+            font-size: 1rem;
+            color: var(--gray);
+            font-weight: 600;
+        }
+
+        .btn {
+            padding: 16px 32px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #05C690);
+            color: white;
+            box-shadow: 0 4px 15px rgba(6, 214, 160, 0.3);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(6, 214, 160, 0.4);
+        }
+
+        .btn-block {
+            width: 100%;
+        }
+
+        /* Transaction History */
+        .transactions-table {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            margin-top: 2rem;
+        }
+
+        .table-header {
+            background: linear-gradient(135deg, var(--secondary), #0056A3);
+            padding: 1.5rem;
+            color: white;
+        }
+
+        .table-header h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .table-content {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            padding: 1.5rem 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--gray);
+            border-bottom: 1px solid var(--light-gray);
+            background: var(--light);
+        }
+
+        td {
+            padding: 1.5rem 1rem;
+            border-bottom: 1px solid var(--light-gray);
+            color: var(--dark);
+            font-weight: 500;
+        }
+
+        tr:hover {
+            background: var(--light);
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .status-completed { background: rgba(6, 214, 160, 0.1); color: var(--success); }
+        .status-pending { background: rgba(255, 209, 102, 0.1); color: var(--warning); }
+        .status-failed { background: rgba(239, 71, 111, 0.1); color: var(--danger); }
+
+        /* KYC Verification */
+        .kyc-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .kyc-steps {
+            display: flex;
+            justify-content: space-between;
+            margin: 2rem 0;
+            position: relative;
+        }
+
+        .kyc-steps::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 10%;
+            right: 10%;
+            height: 3px;
+            background: var(--light-gray);
+            z-index: 1;
+        }
+
+        .kyc-step {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            flex: 1;
+        }
+
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--light-gray);
+            color: var(--gray);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-weight: 700;
+            transition: var(--transition);
+        }
+
+        .kyc-step.active .step-circle {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+        }
+
+        .kyc-step.completed .step-circle {
+            background: var(--success);
+            color: white;
+        }
+
+        .step-label {
+            font-size: 0.9rem;
+            color: var(--gray);
+            font-weight: 600;
+        }
+
+        .kyc-step.active .step-label {
+            color: var(--primary);
+        }
+
+        .kyc-form-container {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 2.5rem;
+            box-shadow: var(--shadow);
+            margin-top: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.8rem;
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 0.95rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid var(--light-gray);
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: var(--transition);
+            background: var(--card-bg);
+            color: var(--dark);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+        }
+
+        .file-upload {
+            border: 2px dashed var(--light-gray);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .file-upload:hover {
+            border-color: var(--primary);
+            background: rgba(255, 107, 53, 0.02);
+        }
+
+        .file-upload i {
+            font-size: 3rem;
+            color: var(--gray);
+            margin-bottom: 1rem;
+        }
+
+        .file-upload p {
+            color: var(--gray);
+            margin-bottom: 0.5rem;
+        }
+
+        .file-upload small {
+            color: var(--gray);
+            font-size: 0.85rem;
+        }
+
+        /* Login/Signup Styles */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+            padding: 2rem;
+        }
+
+        .login-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 3rem;
+            box-shadow: var(--shadow-lg);
+            width: 100%;
+            max-width: 480px;
+            text-align: center;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .login-header {
+            margin-bottom: 2rem;
+        }
+
+        .login-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 1rem;
+        }
+
+        .login-logo .logo-icon {
+            width: 60px;
+            height: 60px;
+        }
+
+        .login-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-subtitle {
+            color: var(--gray);
+            font-size: 1.1rem;
+        }
+
+        .auth-message {
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .auth-message.success {
+            background: rgba(6, 214, 160, 0.1);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .auth-message.error {
+            background: rgba(239, 71, 111, 0.1);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
+        .auth-message.warning {
+            background: rgba(255, 209, 102, 0.1);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 2rem 0;
+            color: var(--gray);
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        .divider span {
+            padding: 0 1rem;
+            font-size: 0.9rem;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 998;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+        }
+
+        .overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            z-index: 1100;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .packages-grid {
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            }
+        }
+
+        @media (max-width: 992px) {
+            .content {
+                padding: 1.5rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+            
+            .platform-status {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 1rem;
+            }
+            
+            .logo-text {
+                font-size: 1.4rem;
+            }
+            
+            .user-name {
+                display: none;
+            }
+            
+            .packages-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .kyc-steps {
+                flex-direction: column;
+                gap: 30px;
+            }
+            
+            .kyc-steps::before {
+                display: none;
+            }
+            
+            .login-card {
+                padding: 2rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .content {
+                padding: 1rem;
+            }
+            
+            .welcome-message h1 {
+                font-size: 2rem;
+            }
+            
+            .stat-card .value {
+                font-size: 1.8rem;
+            }
+            
+            .table-content {
+                font-size: 0.9rem;
+            }
+            
+            th, td {
+                padding: 1rem 0.5rem;
+            }
+            
+            .user-profile-dropdown {
+                min-width: 280px;
+                right: -20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Page -->
+    <div id="login-page" class="login-container">
+        <div class="login-card" id="login-card">
+            <div class="login-header">
+                <div class="login-logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-sun"></i>
+                    </div>
+                    <div>
+                        <h1 class="login-title">MACSUN ENERGIES</h1>
+                        <p class="login-subtitle">Harness the power of the sun for sustainable investments</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="auth-message" class="auth-message"></div>
+            
+            <form id="login-form">
+                <div class="form-group">
+                    <input type="email" id="login-email" class="form-control" placeholder="Email address" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="login-password" class="form-control" placeholder="Password" required>
+                </div>
+                <div style="text-align: right; margin-bottom: 1.5rem;">
+                    <a href="#" id="forgot-password" style="color: var(--primary); text-decoration: none; font-weight: 600;">Forgot Password?</a>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block" id="login-btn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Sign In
+                </button>
+            </form>
+            
+            <div class="divider">
+                <span>Or</span>
+            </div>
+            
+            <button class="btn btn-block" id="google-signin" style="background: var(--light); color: var(--dark); border: 2px solid var(--light-gray);">
+                <i class="fab fa-google"></i>
+                Sign in with Google
+            </button>
+            
+            <p style="margin-top: 2rem; color: var(--gray);">
+                Don't have an account? <a href="#" id="show-signup" style="color: var(--primary); text-decoration: none; font-weight: 600;">Sign up</a>
+            </p>
+        </div>
+
+        <!-- Sign Up Card -->
+        <div class="login-card" id="signup-card" style="display: none;">
+            <div class="login-header">
+                <div class="login-logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-sun"></i>
+                    </div>
+                    <div>
+                        <h1 class="login-title">Join MACSUN</h1>
+                        <p class="login-subtitle">Start your solar investment journey</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="signup-message" class="auth-message"></div>
+            
+            <form id="signup-form">
+                <div class="form-group">
+                    <input type="text" id="signup-name" class="form-control" placeholder="Full Name" required>
+                </div>
+                <div class="form-group">
+                    <input type="email" id="signup-email" class="form-control" placeholder="Email address" required>
+                </div>
+                <div class="form-group">
+                    <input type="tel" id="signup-phone" class="form-control" placeholder="Phone Number" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="signup-password" class="form-control" placeholder="Password (min. 8 characters)" required minlength="8">
+                </div>
+                <div class="form-group">
+                    <input type="password" id="signup-confirm-password" class="form-control" placeholder="Confirm Password" required>
+                </div>
+                <div class="form-group">
+                    <select id="signup-country" class="form-control" required>
+                        <option value="">Select Country</option>
+                        <option value="GH">Ghana</option>
+                        <option value="NG">Nigeria</option>
+                        <option value="KE">Kenya</option>
+                        <option value="ZA">South Africa</option>
+                        <option value="US">United States</option>
+                        <option value="UK">United Kingdom</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: flex-start; font-size: 0.9rem; color: var(--gray); cursor: pointer;">
+                        <input type="checkbox" id="terms-agreement" required style="margin: 4px 10px 0 0; flex-shrink: 0;">
+                        <span>I agree to the <a href="#" style="color: var(--primary);">Terms of Service</a>, <a href="#" style="color: var(--primary);">Privacy Policy</a>, and confirm that I am at least 18 years old.</span>
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block" id="signup-btn">
+                    <i class="fas fa-user-plus"></i>
+                    Create Account
+                </button>
+            </form>
+            
+            <div class="divider">
+                <span>Or</span>
+            </div>
+            
+            <button class="btn btn-block" id="google-signup" style="background: var(--light); color: var(--dark); border: 2px solid var(--light-gray);">
+                <i class="fab fa-google"></i>
+                Sign up with Google
+            </button>
+            
+            <p style="margin-top: 2rem; color: var(--gray);">
+                Already have an account? <a href="#" id="show-login" style="color: var(--primary); text-decoration: none; font-weight: 600;">Sign in</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard-page" class="app-container" style="display: none;">
+        <header class="header">
+            <div class="header-left">
+                <div class="menu-toggle" id="menu-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <div class="logo-container">
+                    <div class="logo">
+                        <div class="logo-icon">
+                            <i class="fas fa-sun"></i>
+                        </div>
+                        <span class="logo-text">MACSUN ENERGIES</span>
+                        <span class="logo-subtext">Solar Investments</span>
+                    </div>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="platform-status" id="platform-status">
+                    <div class="status-indicator status-open"></div>
+                    <span id="platform-status-text">Trading Active • 24/7</span>
+                </div>
+                <div class="theme-toggle" id="theme-toggle">
+                    <i class="fas fa-moon"></i>
+                </div>
+                <div class="notification">
+                    <i class="fas fa-bell"></i>
+                    <div class="notification-badge">2</div>
+                </div>
+                <div class="user-profile-container">
+                    <div class="user-info" id="user-info-toggle">
+                        <div class="user-avatar" id="user-avatar">U</div>
+                        <div>
+                            <div class="user-name" id="user-display-name">User</div>
+                            <div class="user-level" id="user-level">Basic</div>
+                        </div>
+                    </div>
+                    <div class="user-profile-dropdown" id="user-profile-dropdown">
+                        <div class="user-profile-header">
+                            <div class="profile-avatar" id="profile-avatar">U</div>
+                            <h3 class="profile-name" id="profile-name">User</h3>
+                            <p class="profile-email" id="profile-email">user@example.com</p>
+                            <div class="profile-badge" id="kyc-status-badge">
+                                <i class="fas fa-shield-alt"></i>
+                                <span>KYC: Not Verified</span>
+                            </div>
+                        </div>
+                        <div class="user-profile-content">
+                            <div class="profile-info-grid">
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">Account Balance</div>
+                                    <div class="profile-info-value">$0.00</div>
+                                </div>
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">Active Investments</div>
+                                    <div class="profile-info-value">0</div>
+                                </div>
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">Total Profit</div>
+                                    <div class="profile-info-value">$0.00</div>
+                                </div>
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">Member Since</div>
+                                    <div class="profile-info-value" id="member-since">Today</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="profile-actions">
+                            <button class="profile-action-btn" id="verify-email-btn">
+                                <i class="fas fa-envelope"></i>
+                                Verify Email
+                            </button>
+                            <button class="profile-action-btn" id="kyc-verification-btn">
+                                <i class="fas fa-id-card"></i>
+                                Complete KYC
+                            </button>
+                            <button class="profile-action-btn" id="change-password">
+                                <i class="fas fa-key"></i>
+                                Change Password
+                            </button>
+                            <button class="profile-action-btn" id="profile-signout">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Sign Out
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="overlay" id="overlay"></div>
+        <div class="toast" id="toast"></div>
+
+        <div class="main-content">
+            <aside class="sidebar" id="sidebar">
+                <ul class="menu">
+                    <li class="menu-item active" data-target="dashboard">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Dashboard</span>
+                    </li>
+                    <li class="menu-item" data-target="invest">
+                        <i class="fas fa-solar-panel"></i>
+                        <span>Investments</span>
+                    </li>
+                    <li class="menu-item" data-target="my-investments">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>My Investments</span>
+                    </li>
+                    <li class="menu-item" data-target="transactions">
+                        <i class="fas fa-exchange-alt"></i>
+                        <span>Transactions</span>
+                    </li>
+                    <li class="menu-item" data-target="deposit">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Deposit</span>
+                    </li>
+                    <li class="menu-item" data-target="withdraw">
+                        <i class="fas fa-wallet"></i>
+                        <span>Withdraw</span>
+                    </li>
+                    <li class="menu-item" data-target="kyc">
+                        <i class="fas fa-id-card"></i>
+                        <span>KYC Verification</span>
+                    </li>
+                    <li class="menu-item" data-target="referral">
+                        <i class="fas fa-users"></i>
+                        <span>Referral Program</span>
+                    </li>
+                    <li class="menu-item" data-target="support">
+                        <i class="fas fa-headset"></i>
+                        <span>Support</span>
+                    </li>
+                    <li class="menu-item" data-target="settings">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </li>
+                    <li class="menu-item" data-target="signout">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Sign Out</span>
+                    </li>
+                </ul>
+            </aside>
+
+            <div class="content" id="content">
+                <!-- Dashboard Section -->
+                <section id="dashboard" class="section active">
+                    <div class="welcome-message">
+                        <h1 id="dashboard-welcome">Welcome to Solar Investments</h1>
+                        <p>Track your renewable energy investments and earnings in real-time</p>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3>Total Balance</h3>
+                            <div class="value" id="total-balance">$0.00</div>
+                            <div class="change positive">
+                                <i class="fas fa-arrow-up"></i>
+                                <span>Ready to invest</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Active Investments</h3>
+                            <div class="value" id="active-investments">0</div>
+                            <div class="change">
+                                <span>Start investing today</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Daily Earnings</h3>
+                            <div class="value" id="daily-earnings">$0.00</div>
+                            <div class="change">
+                                <span>Will update after investment</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Total Returns</h3>
+                            <div class="value" id="total-returns">$0.00</div>
+                            <div class="change">
+                                <span>Your journey starts here</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="welcome-message">
+                        <h2>Quick Actions</h2>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card" style="cursor: pointer;" onclick="switchSection('deposit')">
+                            <h3><i class="fas fa-plus-circle"></i> Deposit Funds</h3>
+                            <p style="color: var(--gray); margin-top: 10px;">Add funds to start investing in solar projects</p>
+                        </div>
+                        <div class="stat-card" style="cursor: pointer;" onclick="switchSection('invest')">
+                            <h3><i class="fas fa-solar-panel"></i> Start Investing</h3>
+                            <p style="color: var(--gray); margin-top: 10px;">Choose from our solar investment packages</p>
+                        </div>
+                        <div class="stat-card" style="cursor: pointer;" onclick="switchSection('kyc')">
+                            <h3><i class="fas fa-id-card"></i> Complete KYC</h3>
+                            <p style="color: var(--gray); margin-top: 10px;">Verify your identity to unlock full features</p>
+                        </div>
+                        <div class="stat-card" style="cursor: pointer;" onclick="switchSection('referral')">
+                            <h3><i class="fas fa-users"></i> Invite Friends</h3>
+                            <p style="color: var(--gray); margin-top: 10px;">Earn rewards by referring friends</p>
+                        </div>
+                    </div>
+
+                    <div class="welcome-message">
+                        <h2>Recent Transactions</h2>
+                    </div>
+
+                    <div class="transactions-table">
+                        <div class="table-header">
+                            <h3>Latest Activity</h3>
+                        </div>
+                        <div class="table-content">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Type</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-transactions">
+                                    <tr>
+                                        <td colspan="5" style="text-align: center; padding: 3rem; color: var(--gray);">
+                                            <i class="fas fa-exchange-alt" style="font-size: 2rem; margin-bottom: 1rem; display: block; opacity: 0.5;"></i>
+                                            No transactions yet
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Invest Section -->
+                <section id="invest" class="section">
+                    <div class="welcome-message">
+                        <h1>Solar Investment Packages</h1>
+                        <p>Choose from our carefully curated solar energy investment plans</p>
+                    </div>
+
+                    <div class="packages-grid">
+                        <!-- Starter Package -->
+                        <div class="package-card">
+                            <div class="package-badge">Beginner</div>
+                            <div class="package-header">
+                                <div class="package-icon">
+                                    <i class="fas fa-home"></i>
+                                </div>
+                                <h3 class="package-title">Home Solar Starter</h3>
+                                <p class="package-subtitle">Perfect for beginners</p>
+                            </div>
+                            <div class="package-content">
+                                <div class="package-features">
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Daily Return: 1.5%</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Contract Period: 30 days</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Total Return: 45%</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>24/7 Monitoring</span>
+                                    </div>
+                                </div>
+                                <div class="package-price">
+                                    $500 <span>Minimum</span>
+                                </div>
+                                <button class="btn btn-primary btn-block" onclick="investPackage('Home Solar Starter', 500)">
+                                    <i class="fas fa-solar-panel"></i>
+                                    Invest Now
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Advanced Package -->
+                        <div class="package-card">
+                            <div class="package-badge">Popular</div>
+                            <div class="package-header">
+                                <div class="package-icon">
+                                    <i class="fas fa-building"></i>
+                                </div>
+                                <h3 class="package-title">Commercial Solar Pro</h3>
+                                <p class="package-subtitle">For serious investors</p>
+                            </div>
+                            <div class="package-content">
+                                <div class="package-features">
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Daily Return: 2.0%</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Contract Period: 45 days</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Total Return: 90%</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Priority Support</span>
+                                    </div>
+                                </div>
+                                <div class="package-price">
+                                    $2,500 <span>Minimum</span>
+                                </div>
+                                <button class="btn btn-primary btn-block" onclick="investPackage('Commercial Solar Pro', 2500)">
+                                    <i class="fas fa-solar-panel"></i>
+                                    Invest Now
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Premium Package -->
+                        <div class="package-card">
+                            <div class="package-badge">Premium</div>
+                            <div class="package-header">
+                                <div class="package-icon">
+                                    <i class="fas fa-industry"></i>
+                                </div>
+                                <h3 class="package-title">Industrial Solar Plus</h3>
+                                <p class="package-subtitle">Maximum returns</p>
+                            </div>
+                            <div class="package-content">
+                                <div class="package-features">
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Daily Return: 2.5%</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Contract Period: 60 days</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Total Return: 150%</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Dedicated Manager</span>
+                                    </div>
+                                </div>
+                                <div class="package-price">
+                                    $10,000 <span>Minimum</span>
+                                </div>
+                                <button class="btn btn-primary btn-block" onclick="investPackage('Industrial Solar Plus', 10000)">
+                                    <i class="fas fa-solar-panel"></i>
+                                    Invest Now
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- My Investments Section -->
+                <section id="my-investments" class="section">
+                    <div class="welcome-message">
+                        <h1>My Investments</h1>
+                        <p>Track your active solar investments and their performance</p>
+                    </div>
+
+                    <div class="transactions-table">
+                        <div class="table-header">
+                            <h3>Active Investments</h3>
+                        </div>
+                        <div class="table-content">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Package</th>
+                                        <th>Amount</th>
+                                        <th>Start Date</th>
+                                        <th>End Date</th>
+                                        <th>Daily Earnings</th>
+                                        <th>Total Earned</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="active-investments-list">
+                                    <tr>
+                                        <td colspan="7" style="text-align: center; padding: 3rem; color: var(--gray);">
+                                            <i class="fas fa-chart-bar" style="font-size: 2rem; margin-bottom: 1rem; display: block; opacity: 0.5;"></i>
+                                            No active investments
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Transactions Section -->
+                <section id="transactions" class="section">
+                    <div class="welcome-message">
+                        <h1>Transaction History</h1>
+                        <p>Complete history of all your deposits, withdrawals, and earnings</p>
+                    </div>
+
+                    <div class="transactions-table">
+                        <div class="table-header">
+                            <h3>All Transactions</h3>
+                        </div>
+                        <div class="table-content">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Date & Time</th>
+                                        <th>Type</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Reference</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="all-transactions">
+                                    <tr>
+                                        <td colspan="6" style="text-align: center; padding: 3rem; color: var(--gray);">
+                                            <i class="fas fa-exchange-alt" style="font-size: 2rem; margin-bottom: 1rem; display: block; opacity: 0.5;"></i>
+                                            No transaction history available
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Deposit Section -->
+                <section id="deposit" class="section">
+                    <div class="welcome-message">
+                        <h1>Deposit Funds</h1>
+                        <p>Add funds to your account to start investing</p>
+                    </div>
+
+                    <div class="kyc-form-container">
+                        <h2 style="margin-bottom: 2rem; color: var(--dark);">Make a Deposit</h2>
+                        <form id="deposit-form">
+                            <div class="form-group">
+                                <label for="deposit-amount">Amount (USD)</label>
+                                <input type="number" id="deposit-amount" class="form-control" placeholder="Enter amount" min="10" required>
+                                <p style="margin-top: 0.5rem; color: var(--gray); font-size: 0.9rem;">Minimum deposit: $10</p>
+                            </div>
+                            <div class="form-group">
+                                <label for="deposit-method">Payment Method</label>
+                                <select id="deposit-method" class="form-control" required>
+                                    <option value="">Select method</option>
+                                    <option value="bank-transfer">Bank Transfer</option>
+                                    <option value="credit-card">Credit/Debit Card</option>
+                                    <option value="crypto">Cryptocurrency</option>
+                                    <option value="mobile-money">Mobile Money</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="deposit-notes">Notes (Optional)</label>
+                                <textarea id="deposit-notes" class="form-control" rows="3" placeholder="Add any notes for this deposit"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <i class="fas fa-plus-circle"></i>
+                                Process Deposit
+                            </button>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- Withdraw Section -->
+                <section id="withdraw" class="section">
+                    <div class="welcome-message">
+                        <h1>Withdraw Funds</h1>
+                        <p>Withdraw your earnings to your preferred payment method</p>
+                    </div>
+
+                    <div class="kyc-form-container">
+                        <h2 style="margin-bottom: 2rem; color: var(--dark);">Request Withdrawal</h2>
+                        <form id="withdraw-form">
+                            <div class="form-group">
+                                <label for="withdraw-amount">Amount (USD)</label>
+                                <input type="number" id="withdraw-amount" class="form-control" placeholder="Enter amount" min="20" required>
+                                <p style="margin-top: 0.5rem; color: var(--gray); font-size: 0.9rem;">Available balance: <span id="withdraw-balance">$0.00</span></p>
+                                <p style="margin-top: 0.5rem; color: var(--gray); font-size: 0.9rem;">Minimum withdrawal: $20</p>
+                            </div>
+                            <div class="form-group">
+                                <label for="withdraw-method">Withdrawal Method</label>
+                                <select id="withdraw-method" class="form-control" required>
+                                    <option value="">Select method</option>
+                                    <option value="bank-transfer">Bank Transfer</option>
+                                    <option value="crypto">Cryptocurrency</option>
+                                    <option value="paypal">PayPal</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="account-details">Account Details</label>
+                                <input type="text" id="account-details" class="form-control" placeholder="Enter account number or wallet address" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <i class="fas fa-paper-plane"></i>
+                                Request Withdrawal
+                            </button>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- KYC Verification Section -->
+                <section id="kyc" class="section">
+                    <div class="welcome-message">
+                        <h1>KYC Verification</h1>
+                        <p>Verify your identity to unlock all platform features</p>
+                    </div>
+
+                    <div class="kyc-container">
+                        <div class="kyc-steps">
+                            <div class="kyc-step active" id="step1">
+                                <div class="step-circle">1</div>
+                                <div class="step-label">Personal Info</div>
+                            </div>
+                            <div class="kyc-step" id="step2">
+                                <div class="step-circle">2</div>
+                                <div class="step-label">ID Verification</div>
+                            </div>
+                            <div class="kyc-step" id="step3">
+                                <div class="step-circle">3</div>
+                                <div class="step-label">Address Proof</div>
+                            </div>
+                            <div class="kyc-step" id="step4">
+                                <div class="step-circle">4</div>
+                                <div class="step-label">Review</div>
+                            </div>
+                        </div>
+
+                        <div id="kyc-step-content">
+                            <!-- Step 1: Personal Info -->
+                            <div class="kyc-form-container" id="kyc-step1">
+                                <h2 style="margin-bottom: 2rem; color: var(--dark);">Personal Information</h2>
+                                <form id="kyc-personal-form">
+                                    <div class="form-group">
+                                        <label for="kyc-fullname">Full Legal Name</label>
+                                        <input type="text" id="kyc-fullname" class="form-control" placeholder="As shown on your ID" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="kyc-dob">Date of Birth</label>
+                                        <input type="date" id="kyc-dob" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="kyc-nationality">Nationality</label>
+                                        <input type="text" id="kyc-nationality" class="form-control" placeholder="Your nationality" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="kyc-address">Residential Address</label>
+                                        <textarea id="kyc-address" class="form-control" rows="3" placeholder="Your complete address" required></textarea>
+                                    </div>
+                                    <button type="button" class="btn btn-primary btn-block" onclick="nextKycStep(2)">
+                                        Continue to Step 2
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- Step 2: ID Verification -->
+                            <div class="kyc-form-container" id="kyc-step2" style="display: none;">
+                                <h2 style="margin-bottom: 2rem; color: var(--dark);">ID Document Verification</h2>
+                                <form id="kyc-id-form">
+                                    <div class="form-group">
+                                        <label for="kyc-id-type">ID Document Type</label>
+                                        <select id="kyc-id-type" class="form-control" required>
+                                            <option value="">Select document type</option>
+                                            <option value="passport">Passport</option>
+                                            <option value="national-id">National ID</option>
+                                            <option value="drivers-license">Driver's License</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="kyc-id-number">ID Number</label>
+                                        <input type="text" id="kyc-id-number" class="form-control" placeholder="ID document number" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>ID Front Photo</label>
+                                        <div class="file-upload" onclick="document.getElementById('id-front-input').click()">
+                                            <i class="fas fa-camera"></i>
+                                            <p>Click to upload front of ID</p>
+                                            <small>JPG, PNG, PDF up to 5MB</small>
+                                            <input type="file" id="id-front-input" accept="image/*,.pdf" style="display: none;">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>ID Back Photo</label>
+                                        <div class="file-upload" onclick="document.getElementById('id-back-input').click()">
+                                            <i class="fas fa-camera"></i>
+                                            <p>Click to upload back of ID</p>
+                                            <small>JPG, PNG, PDF up to 5MB</small>
+                                            <input type="file" id="id-back-input" accept="image/*,.pdf" style="display: none;">
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; gap: 1rem;">
+                                        <button type="button" class="btn" style="flex: 1;" onclick="prevKycStep(1)">
+                                            Back
+                                        </button>
+                                        <button type="button" class="btn btn-primary" style="flex: 1;" onclick="nextKycStep(3)">
+                                            Continue to Step 3
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Step 3: Address Proof -->
+                            <div class="kyc-form-container" id="kyc-step3" style="display: none;">
+                                <h2 style="margin-bottom: 2rem; color: var(--dark);">Proof of Address</h2>
+                                <form id="kyc-address-form">
+                                    <div class="form-group">
+                                        <label for="kyc-proof-type">Proof of Address Document</label>
+                                        <select id="kyc-proof-type" class="form-control" required>
+                                            <option value="">Select document type</option>
+                                            <option value="utility-bill">Utility Bill</option>
+                                            <option value="bank-statement">Bank Statement</option>
+                                            <option value="tax-bill">Tax Bill</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Document Upload</label>
+                                        <div class="file-upload" onclick="document.getElementById('address-proof-input').click()">
+                                            <i class="fas fa-file-upload"></i>
+                                            <p>Click to upload proof of address</p>
+                                            <small>JPG, PNG, PDF up to 5MB</small>
+                                            <input type="file" id="address-proof-input" accept="image/*,.pdf" style="display: none;">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="kyc-proof-notes">Additional Notes (Optional)</label>
+                                        <textarea id="kyc-proof-notes" class="form-control" rows="3" placeholder="Any additional information"></textarea>
+                                    </div>
+                                    <div style="display: flex; gap: 1rem;">
+                                        <button type="button" class="btn" style="flex: 1;" onclick="prevKycStep(2)">
+                                            Back
+                                        </button>
+                                        <button type="button" class="btn btn-primary" style="flex: 1;" onclick="nextKycStep(4)">
+                                            Review & Submit
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Step 4: Review -->
+                            <div class="kyc-form-container" id="kyc-step4" style="display: none;">
+                                <h2 style="margin-bottom: 2rem; color: var(--dark);">Review & Submit</h2>
+                                <div style="background: var(--light); padding: 2rem; border-radius: 12px; margin-bottom: 2rem;">
+                                    <h3 style="color: var(--dark); margin-bottom: 1.5rem;">Please review your information</h3>
+                                    <div id="kyc-review-content">
+                                        <!-- Review content will be populated here -->
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 1rem;">
+                                    <button type="button" class="btn" style="flex: 1;" onclick="prevKycStep(3)">
+                                        Back
+                                    </button>
+                                    <button type="button" class="btn btn-success" style="flex: 1;" onclick="submitKyc()">
+                                        <i class="fas fa-check-circle"></i>
+                                        Submit for Verification
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Other sections (Referral, Support, Settings, Signout) -->
+                <section id="referral" class="section">
+                    <div class="welcome-message">
+                        <h1>Referral Program</h1>
+                        <p>Earn rewards by inviting friends to join MACSUN ENERGIES</p>
+                    </div>
+                    <div class="kyc-form-container">
+                        <h2 style="margin-bottom: 2rem; color: var(--dark);">Your Referral Link</h2>
+                        <div class="form-group">
+                            <div style="display: flex; gap: 10px; margin-bottom: 1.5rem;">
+                                <input type="text" id="referral-link" class="form-control" value="https://macsun-energies.com/ref/USER123" readonly>
+                                <button type="button" class="btn btn-primary" onclick="copyReferralLink()">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <p style="color: var(--dark); font-weight: 600; margin-bottom: 0.5rem;">How it works:</p>
+                            <ul style="color: var(--gray); margin-left: 1.5rem;">
+                                <li>Share your referral link with friends</li>
+                                <li>Earn 10% commission on their first investment</li>
+                                <li>Earn 5% commission on their subsequent investments</li>
+                                <li>Commission paid directly to your account balance</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="support" class="section">
+                    <div class="welcome-message">
+                        <h1>Support Center</h1>
+                        <p>Get help with your account and investments</p>
+                    </div>
+                    <div class="kyc-form-container">
+                        <h2 style="margin-bottom: 2rem; color: var(--dark);">Contact Support</h2>
+                        <form id="support-form">
+                            <div class="form-group">
+                                <label for="support-subject">Subject</label>
+                                <input type="text" id="support-subject" class="form-control" placeholder="Brief description of your issue" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="support-message">Message</label>
+                                <textarea id="support-message" class="form-control" rows="5" placeholder="Describe your issue in detail" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <i class="fas fa-paper-plane"></i>
+                                Send Message
+                            </button>
+                        </form>
+                    </div>
+                </section>
+
+                <section id="settings" class="section">
+                    <div class="welcome-message">
+                        <h1>Account Settings</h1>
+                        <p>Manage your account preferences and security</p>
+                    </div>
+                    <div class="kyc-form-container">
+                        <h2 style="margin-bottom: 2rem; color: var(--dark);">Update Profile</h2>
+                        <form id="settings-form">
+                            <div class="form-group">
+                                <label for="settings-name">Full Name</label>
+                                <input type="text" id="settings-name" class="form-control" value="">
+                            </div>
+                            <div class="form-group">
+                                <label for="settings-phone">Phone Number</label>
+                                <input type="tel" id="settings-phone" class="form-control" value="">
+                            </div>
+                            <div class="form-group">
+                                <label for="settings-email">Email Address</label>
+                                <input type="email" id="settings-email" class="form-control" value="" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="settings-password">New Password</label>
+                                <input type="password" id="settings-password" class="form-control" placeholder="Leave blank to keep current">
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <i class="fas fa-save"></i>
+                                Save Changes
+                            </button>
+                        </form>
+                    </div>
+                </section>
+
+                <section id="signout" class="section">
+                    <div class="welcome-message">
+                        <h1>Sign Out</h1>
+                        <p>We hope to see you again soon!</p>
+                    </div>
+                    <div class="kyc-form-container">
+                        <h2 style="margin-bottom: 2rem; color: var(--dark);">Confirm Sign Out</h2>
+                        <p style="margin-bottom: 2rem; color: var(--gray);">Your investments will continue to earn while you're away.</p>
+                        <button type="button" class="btn btn-primary btn-block" onclick="signOutUser()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            Sign Out
+                        </button>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let userData = null;
+        let currentKycStep = 1;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                initFirebaseAuth();
+                initApp();
+            }, 500);
+        });
+
+        function initApp() {
+            // Menu toggle
+            const menuToggle = document.getElementById('menu-toggle');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            
+            let sidebarOpen = false;
+            let profileDropdownOpen = false;
+
+            function toggleSidebar() {
+                sidebarOpen = !sidebarOpen;
+                sidebar.classList.toggle('active', sidebarOpen);
+                overlay.classList.toggle('active', sidebarOpen);
+                menuToggle.classList.toggle('active', sidebarOpen);
+            }
+
+            menuToggle.addEventListener('click', toggleSidebar);
+            overlay.addEventListener('click', toggleSidebar);
+
+            // Theme toggle
+            const themeToggle = document.getElementById('theme-toggle');
+            themeToggle.addEventListener('click', function() {
+                document.body.classList.toggle('dark-mode');
+                themeToggle.innerHTML = document.body.classList.contains('dark-mode') ? 
+                    '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+            });
+
+            // User profile dropdown
+            const userInfoToggle = document.getElementById('user-info-toggle');
+            const userProfileDropdown = document.getElementById('user-profile-dropdown');
+            
+            userInfoToggle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                profileDropdownOpen = !profileDropdownOpen;
+                userProfileDropdown.classList.toggle('active', profileDropdownOpen);
+            });
+
+            document.addEventListener('click', function(e) {
+                if (profileDropdownOpen && !userInfoToggle.contains(e.target) && !userProfileDropdown.contains(e.target)) {
+                    userProfileDropdown.classList.remove('active');
+                    profileDropdownOpen = false;
+                }
+            });
+
+            // Menu navigation
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    menuItems.forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const targetId = this.getAttribute('data-target');
+                    switchSection(targetId);
+                    
+                    if (window.innerWidth <= 768) {
+                        toggleSidebar();
+                    }
+                    
+                    if (profileDropdownOpen) {
+                        userProfileDropdown.classList.remove('active');
+                        profileDropdownOpen = false;
+                    }
+                });
+            });
+
+            // Forms
+            const forms = ['deposit-form', 'withdraw-form', 'support-form', 'settings-form'];
+            forms.forEach(formId => {
+                const form = document.getElementById(formId);
+                if (form) {
+                    form.addEventListener('submit', async function(e) {
+                        e.preventDefault();
+                        await handleFormSubmit(formId);
+                    });
+                }
+            });
+
+            // KYC buttons
+            document.getElementById('kyc-verification-btn')?.addEventListener('click', () => switchSection('kyc'));
+            document.getElementById('verify-email-btn')?.addEventListener('click', verifyEmail);
+            document.getElementById('change-password')?.addEventListener('click', changePassword);
+            document.getElementById('profile-signout')?.addEventListener('click', signOutUser);
+
+            // Initialize platform status
+            updatePlatformStatus();
+            setInterval(updatePlatformStatus, 60000);
+        }
+
+        function switchSection(sectionId) {
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(section => section.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Load section-specific data
+            switch(sectionId) {
+                case 'dashboard':
+                    loadDashboardData();
+                    break;
+                case 'transactions':
+                    loadTransactions();
+                    break;
+                case 'my-investments':
+                    loadMyInvestments();
+                    break;
+            }
+        }
+
+        async function initFirebaseAuth() {
+            if (!window.auth) {
+                setTimeout(initFirebaseAuth, 100);
+                return;
+            }
+
+            // Set up auth state listener
+            window.onAuthStateChanged(window.auth, async (user) => {
+                const loginPage = document.getElementById('login-page');
+                const dashboardPage = document.getElementById('dashboard-page');
+                
+                if (user) {
+                    // User is signed in
+                    currentUser = user;
+                    loginPage.style.display = 'none';
+                    dashboardPage.style.display = 'flex';
+                    
+                    // Load or create user data
+                    await loadUserData();
+                    updateUIWithUserData();
+                    
+                    // Check email verification
+                    updateEmailVerificationStatus();
+                    
+                } else {
+                    // User is signed out
+                    currentUser = null;
+                    userData = null;
+                    loginPage.style.display = 'flex';
+                    dashboardPage.style.display = 'none';
+                    
+                    // Show login form by default
+                    document.getElementById('signup-card').style.display = 'none';
+                    document.getElementById('login-card').style.display = 'block';
+                    clearAuthMessages();
+                }
+            });
+
+            // Set up login form
+            const loginForm = document.getElementById('login-form');
+            if (loginForm) {
+                loginForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    await handleLogin();
+                });
+            }
+
+            // Set up signup form
+            const signupForm = document.getElementById('signup-form');
+            if (signupForm) {
+                signupForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    await handleSignup();
+                });
+            }
+
+            // Google Sign In
+            document.getElementById('google-signin')?.addEventListener('click', async () => {
+                await handleGoogleSignIn();
+            });
+
+            document.getElementById('google-signup')?.addEventListener('click', async () => {
+                await handleGoogleSignIn();
+            });
+
+            // Forgot Password
+            document.getElementById('forgot-password')?.addEventListener('click', async function(e) {
+                e.preventDefault();
+                const email = document.getElementById('login-email').value;
+                if (!email) {
+                    showAuthMessage('Please enter your email address first.', 'warning');
+                    return;
+                }
+                await resetPassword(email);
+            });
+
+            // Toggle between login/signup
+            document.getElementById('show-signup')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.getElementById('login-card').style.display = 'none';
+                document.getElementById('signup-card').style.display = 'block';
+                clearAuthMessages();
+            });
+
+            document.getElementById('show-login')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.getElementById('signup-card').style.display = 'none';
+                document.getElementById('login-card').style.display = 'block';
+                clearAuthMessages();
+            });
+        }
+
+        async function handleLogin() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const loginBtn = document.getElementById('login-btn');
+
+            // Show loading
+            const originalText = loginBtn.innerHTML;
+            loginBtn.innerHTML = '<span class="loading-spinner"></span> Signing in...';
+            loginBtn.disabled = true;
+
+            try {
+                await window.signInWithEmailAndPassword(window.auth, email, password);
+                showAuthMessage('Successfully signed in!', 'success');
+            } catch (error) {
+                let errorMessage = 'An error occurred during sign in.';
+                switch (error.code) {
+                    case 'auth/user-not-found':
+                    case 'auth/wrong-password':
+                        errorMessage = 'Invalid email or password.';
+                        break;
+                    case 'auth/too-many-requests':
+                        errorMessage = 'Too many failed attempts. Please try again later.';
+                        break;
+                    default:
+                        errorMessage = error.message;
+                }
+                showAuthMessage(errorMessage, 'error');
+            } finally {
+                loginBtn.innerHTML = originalText;
+                loginBtn.disabled = false;
+            }
+        }
+
+        async function handleSignup() {
+            const name = document.getElementById('signup-name').value;
+            const email = document.getElementById('signup-email').value;
+            const phone = document.getElementById('signup-phone').value;
+            const password = document.getElementById('signup-password').value;
+            const confirmPassword = document.getElementById('signup-confirm-password').value;
+            const country = document.getElementById('signup-country').value;
+            const signupBtn = document.getElementById('signup-btn');
+
+            // Validation
+            if (password !== confirmPassword) {
+                showAuthMessage('Passwords do not match.', 'error', 'signup');
+                return;
+            }
+            if (password.length < 8) {
+                showAuthMessage('Password must be at least 8 characters.', 'error', 'signup');
+                return;
+            }
+
+            // Show loading
+            const originalText = signupBtn.innerHTML;
+            signupBtn.innerHTML = '<span class="loading-spinner"></span> Creating account...';
+            signupBtn.disabled = true;
+
+            try {
+                // Create user with email/password
+                const userCredential = await window.createUserWithEmailAndPassword(window.auth, email, password);
+                
+                // Create user document in Firestore
+                await createUserDocument(userCredential.user.uid, {
+                    name: name,
+                    email: email,
+                    phone: phone,
+                    country: country,
+                    createdAt: new Date().toISOString(),
+                    balance: 0,
+                    kycStatus: 'not_verified',
+                    referralCode: generateReferralCode(),
+                    level: 'basic'
+                });
+
+                // Send verification email
+                await window.sendEmailVerification(userCredential.user);
+                
+                showAuthMessage('Account created! Please check your email for verification.', 'success', 'signup');
+                
+                // Auto-switch to login after 3 seconds
+                setTimeout(() => {
+                    document.getElementById('signup-card').style.display = 'none';
+                    document.getElementById('login-card').style.display = 'block';
+                    clearAuthMessages();
+                    document.getElementById('login-email').value = email;
+                }, 3000);
+                
+            } catch (error) {
+                let errorMessage = 'An error occurred during sign up.';
+                switch (error.code) {
+                    case 'auth/email-already-in-use':
+                        errorMessage = 'An account already exists with this email.';
+                        break;
+                    case 'auth/invalid-email':
+                        errorMessage = 'Invalid email address.';
+                        break;
+                    default:
+                        errorMessage = error.message;
+                }
+                showAuthMessage(errorMessage, 'error', 'signup');
+            } finally {
+                signupBtn.innerHTML = originalText;
+                signupBtn.disabled = false;
+            }
+        }
+
+        async function handleGoogleSignIn() {
+            try {
+                const result = await window.signInWithPopup(window.auth, window.googleProvider);
+                const user = result.user;
+                
+                // Check if user document exists
+                const userDoc = await window.firestore.getDoc(window.firestore.doc(window.db, 'users', user.uid));
+                
+                if (!userDoc.exists()) {
+                    // Create new user document for Google sign-in
+                    await createUserDocument(user.uid, {
+                        name: user.displayName || 'User',
+                        email: user.email,
+                        phone: '',
+                        country: '',
+                        createdAt: new Date().toISOString(),
+                        balance: 0,
+                        kycStatus: 'not_verified',
+                        referralCode: generateReferralCode(),
+                        level: 'basic'
+                    });
+                }
+                
+                showAuthMessage('Successfully signed in with Google!', 'success');
+            } catch (error) {
+                showAuthMessage('Error signing in with Google: ' + error.message, 'error');
+            }
+        }
+
+        async function createUserDocument(uid, userData) {
+            try {
+                await window.firestore.setDoc(window.firestore.doc(window.db, 'users', uid), userData);
+                
+                // Create initial transaction record
+                await window.firestore.addDoc(window.firestore.collection(window.db, 'transactions'), {
+                    userId: uid,
+                    type: 'account_creation',
+                    amount: 0,
+                    status: 'completed',
+                    description: 'Account created',
+                    timestamp: new Date().toISOString(),
+                    reference: 'ACC-' + Date.now()
+                });
+                
+                return true;
+            } catch (error) {
+                console.error('Error creating user document:', error);
+                return false;
+            }
+        }
+
+        async function loadUserData() {
+            if (!currentUser) return;
+            
+            try {
+                const userDoc = await window.firestore.getDoc(window.firestore.doc(window.db, 'users', currentUser.uid));
+                if (userDoc.exists()) {
+                    userData = userDoc.data();
+                    return userData;
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
+            return null;
+        }
+
+        function updateUIWithUserData() {
+            if (!currentUser || !userData) return;
+            
+            // Update header
+            document.getElementById('user-avatar').textContent = userData.name.charAt(0).toUpperCase();
+            document.getElementById('user-display-name').textContent = userData.name;
+            document.getElementById('user-level').textContent = userData.level || 'Basic';
+            
+            // Update profile dropdown
+            document.getElementById('profile-avatar').textContent = userData.name.charAt(0).toUpperCase();
+            document.getElementById('profile-name').textContent = userData.name;
+            document.getElementById('profile-email').textContent = userData.email;
+            document.getElementById('member-since').textContent = new Date(userData.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+            
+            // Update KYC status
+            const kycBadge = document.getElementById('kyc-status-badge');
+            if (userData.kycStatus === 'verified') {
+                kycBadge.innerHTML = '<i class="fas fa-check-circle"></i><span>KYC: Verified</span>';
+                kycBadge.style.background = 'rgba(6, 214, 160, 0.2)';
+                kycBadge.style.color = 'var(--success)';
+            } else if (userData.kycStatus === 'pending') {
+                kycBadge.innerHTML = '<i class="fas fa-clock"></i><span>KYC: Pending</span>';
+                kycBadge.style.background = 'rgba(255, 209, 102, 0.2)';
+                kycBadge.style.color = 'var(--warning)';
+            } else {
+                kycBadge.innerHTML = '<i class="fas fa-exclamation-circle"></i><span>KYC: Not Verified</span>';
+                kycBadge.style.background = 'rgba(239, 71, 111, 0.2)';
+                kycBadge.style.color = 'var(--danger)';
+            }
+            
+            // Update dashboard
+            document.getElementById('dashboard-welcome').textContent = `Welcome back, ${userData.name}!`;
+            document.getElementById('total-balance').textContent = `$${userData.balance?.toFixed(2) || '0.00'}`;
+            
+            // Update settings form
+            document.getElementById('settings-name').value = userData.name;
+            document.getElementById('settings-phone').value = userData.phone || '';
+            document.getElementById('settings-email').value = userData.email;
+            
+            // Update referral link
+            document.getElementById('referral-link').value = `https://macsun-energies.com/ref/${userData.referralCode}`;
+            
+            // Update withdraw balance
+            document.getElementById('withdraw-balance').textContent = `$${userData.balance?.toFixed(2) || '0.00'}`;
+            
+            // Load additional data
+            loadDashboardData();
+        }
+
+        async function loadDashboardData() {
+            if (!currentUser) return;
+            
+            try {
+                // Load transactions
+                const transactionsQuery = window.firestore.query(
+                    window.firestore.collection(window.db, 'transactions'),
+                    window.firestore.where('userId', '==', currentUser.uid),
+                    window.firestore.where('timestamp', '>=', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+                );
+                
+                const transactionsSnapshot = await window.firestore.getDocs(transactionsQuery);
+                const recentTransactions = [];
+                
+                transactionsSnapshot.forEach(doc => {
+                    recentTransactions.push(doc.data());
+                });
+                
+                // Sort by date (newest first)
+                recentTransactions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                
+                // Update transactions table
+                const tbody = document.getElementById('recent-transactions');
+                tbody.innerHTML = '';
+                
+                if (recentTransactions.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 3rem; color: var(--gray);">
+                                <i class="fas fa-exchange-alt" style="font-size: 2rem; margin-bottom: 1rem; display: block; opacity: 0.5;"></i>
+                                No transactions yet
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    recentTransactions.slice(0, 5).forEach(transaction => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${new Date(transaction.timestamp).toLocaleDateString()}</td>
+                            <td>${transaction.type}</td>
+                            <td>$${transaction.amount.toFixed(2)}</td>
+                            <td><span class="status-badge status-${transaction.status}">${transaction.status}</span></td>
+                            <td>${transaction.description}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
+                
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+            }
+        }
+
+        async function loadTransactions() {
+            if (!currentUser) return;
+            
+            try {
+                const transactionsQuery = window.firestore.query(
+                    window.firestore.collection(window.db, 'transactions'),
+                    window.firestore.where('userId', '==', currentUser.uid)
+                );
+                
+                const transactionsSnapshot = await window.firestore.getDocs(transactionsQuery);
+                const transactions = [];
+                
+                transactionsSnapshot.forEach(doc => {
+                    transactions.push(doc.data());
+                });
+                
+                // Sort by date (newest first)
+                transactions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                
+                // Update transactions table
+                const tbody = document.getElementById('all-transactions');
+                tbody.innerHTML = '';
+                
+                if (transactions.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 3rem; color: var(--gray);">
+                                <i class="fas fa-exchange-alt" style="font-size: 2rem; margin-bottom: 1rem; display: block; opacity: 0.5;"></i>
+                                No transaction history available
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    transactions.forEach(transaction => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${new Date(transaction.timestamp).toLocaleString()}</td>
+                            <td>${transaction.type}</td>
+                            <td>$${transaction.amount.toFixed(2)}</td>
+                            <td><span class="status-badge status-${transaction.status}">${transaction.status}</span></td>
+                            <td>${transaction.reference || 'N/A'}</td>
+                            <td>${transaction.description}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
+                
+            } catch (error) {
+                console.error('Error loading transactions:', error);
+            }
+        }
+
+        async function loadMyInvestments() {
+            if (!currentUser) return;
+            
+            try {
+                const investmentsQuery = window.firestore.query(
+                    window.firestore.collection(window.db, 'investments'),
+                    window.firestore.where('userId', '==', currentUser.uid),
+                    window.firestore.where('status', '==', 'active')
+                );
+                
+                const investmentsSnapshot = await window.firestore.getDocs(investmentsQuery);
+                const investments = [];
+                
+                investmentsSnapshot.forEach(doc => {
+                    investments.push(doc.data());
+                });
+                
+                // Update investments table
+                const tbody = document.getElementById('active-investments-list');
+                tbody.innerHTML = '';
+                
+                if (investments.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 3rem; color: var(--gray);">
+                                <i class="fas fa-chart-bar" style="font-size: 2rem; margin-bottom: 1rem; display: block; opacity: 0.5;"></i>
+                                No active investments
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    investments.forEach(investment => {
+                        const totalEarned = investment.amount * (investment.dailyReturn / 100) * 
+                            Math.floor((new Date() - new Date(investment.startDate)) / (1000 * 60 * 60 * 24));
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${investment.packageName}</td>
+                            <td>$${investment.amount.toFixed(2)}</td>
+                            <td>${new Date(investment.startDate).toLocaleDateString()}</td>
+                            <td>${new Date(investment.endDate).toLocaleDateString()}</td>
+                            <td>$${(investment.amount * (investment.dailyReturn / 100)).toFixed(2)}</td>
+                            <td>$${totalEarned.toFixed(2)}</td>
+                            <td><span class="status-badge status-completed">Active</span></td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                    
+                    // Update active investments count
+                    document.getElementById('active-investments').textContent = investments.length;
+                }
+                
+            } catch (error) {
+                console.error('Error loading investments:', error);
+            }
+        }
+
+        async function handleFormSubmit(formId) {
+            switch(formId) {
+                case 'deposit-form':
+                    await handleDeposit();
+                    break;
+                case 'withdraw-form':
+                    await handleWithdraw();
+                    break;
+                case 'support-form':
+                    await handleSupport();
+                    break;
+                case 'settings-form':
+                    await handleSettingsUpdate();
+                    break;
+            }
+        }
+
+        async function handleDeposit() {
+            const amount = parseFloat(document.getElementById('deposit-amount').value);
+            const method = document.getElementById('deposit-method').value;
+            const notes = document.getElementById('deposit-notes').value;
+            
+            if (!currentUser || !userData) return;
+            
+            if (amount < 10) {
+                showToast('Minimum deposit is $10', 'error');
+                return;
+            }
+            
+            try {
+                // Create transaction record
+                await window.firestore.addDoc(window.firestore.collection(window.db, 'transactions'), {
+                    userId: currentUser.uid,
+                    type: 'deposit',
+                    amount: amount,
+                    status: 'pending',
+                    method: method,
+                    description: `Deposit via ${method}` + (notes ? ` - ${notes}` : ''),
+                    timestamp: new Date().toISOString(),
+                    reference: 'DEP-' + Date.now()
+                });
+                
+                showToast('Deposit request submitted successfully! It will be processed within 24 hours.', 'success');
+                document.getElementById('deposit-form').reset();
+                
+                // Refresh data
+                loadDashboardData();
+                
+            } catch (error) {
+                showToast('Error submitting deposit: ' + error.message, 'error');
+            }
+        }
+
+        async function handleWithdraw() {
+            const amount = parseFloat(document.getElementById('withdraw-amount').value);
+            const method = document.getElementById('withdraw-method').value;
+            const accountDetails = document.getElementById('account-details').value;
+            
+            if (!currentUser || !userData) return;
+            
+            if (amount < 20) {
+                showToast('Minimum withdrawal is $20', 'error');
+                return;
+            }
+            
+            if (amount > userData.balance) {
+                showToast('Insufficient balance', 'error');
+                return;
+            }
+            
+            try {
+                // Create transaction record
+                await window.firestore.addDoc(window.firestore.collection(window.db, 'transactions'), {
+                    userId: currentUser.uid,
+                    type: 'withdrawal',
+                    amount: amount,
+                    status: 'pending',
+                    method: method,
+                    description: `Withdrawal to ${method}`,
+                    timestamp: new Date().toISOString(),
+                    reference: 'WTH-' + Date.now(),
+                    accountDetails: accountDetails
+                });
+                
+                showToast('Withdrawal request submitted successfully! Processing time: 24-48 hours.', 'success');
+                document.getElementById('withdraw-form').reset();
+                
+                // Refresh data
+                loadDashboardData();
+                
+            } catch (error) {
+                showToast('Error submitting withdrawal: ' + error.message, 'error');
+            }
+        }
+
+        async function handleSupport() {
+            const subject = document.getElementById('support-subject').value;
+            const message = document.getElementById('support-message').value;
+            
+            try {
+                // Create support ticket
+                await window.firestore.addDoc(window.firestore.collection(window.db, 'support_tickets'), {
+                    userId: currentUser.uid,
+                    subject: subject,
+                    message: message,
+                    status: 'open',
+                    timestamp: new Date().toISOString(),
+                    ticketId: 'TKT-' + Date.now()
+                });
+                
+                showToast('Support ticket created successfully! We will respond within 24 hours.', 'success');
+                document.getElementById('support-form').reset();
+                
+            } catch (error) {
+                showToast('Error submitting support ticket: ' + error.message, 'error');
+            }
+        }
+
+        async function handleSettingsUpdate() {
+            const name = document.getElementById('settings-name').value;
+            const phone = document.getElementById('settings-phone').value;
+            const password = document.getElementById('settings-password').value;
+            
+            try {
+                // Update user document
+                await window.firestore.updateDoc(window.firestore.doc(window.db, 'users', currentUser.uid), {
+                    name: name,
+                    phone: phone
+                });
+                
+                // Update userData
+                userData.name = name;
+                userData.phone = phone;
+                
+                // Update UI
+                updateUIWithUserData();
+                
+                showToast('Profile updated successfully!', 'success');
+                
+            } catch (error) {
+                showToast('Error updating profile: ' + error.message, 'error');
+            }
+        }
+
+        // KYC Functions
+        function nextKycStep(step) {
+            // Validate current step
+            if (!validateKycStep(currentKycStep)) {
+                return;
+            }
+            
+            // Hide current step
+            document.getElementById(`kyc-step${currentKycStep}`).style.display = 'none';
+            document.getElementById(`step${currentKycStep}`).classList.remove('active');
+            
+            // Show next step
+            document.getElementById(`kyc-step${step}`).style.display = 'block';
+            document.getElementById(`step${step}`).classList.add('active');
+            
+            currentKycStep = step;
+            
+            if (step === 4) {
+                populateReviewContent();
+            }
+        }
+
+        function prevKycStep(step) {
+            // Hide current step
+            document.getElementById(`kyc-step${currentKycStep}`).style.display = 'none';
+            document.getElementById(`step${currentKycStep}`).classList.remove('active');
+            
+            // Show previous step
+            document.getElementById(`kyc-step${step}`).style.display = 'block';
+            document.getElementById(`step${step}`).classList.add('active');
+            
+            currentKycStep = step;
+        }
+
+        function validateKycStep(step) {
+            switch(step) {
+                case 1:
+                    const fullname = document.getElementById('kyc-fullname').value;
+                    const dob = document.getElementById('kyc-dob').value;
+                    const nationality = document.getElementById('kyc-nationality').value;
+                    const address = document.getElementById('kyc-address').value;
+                    
+                    if (!fullname || !dob || !nationality || !address) {
+                        showToast('Please fill all required fields', 'error');
+                        return false;
+                    }
+                    return true;
+                case 2:
+                    const idType = document.getElementById('kyc-id-type').value;
+                    const idNumber = document.getElementById('kyc-id-number').value;
+                    
+                    if (!idType || !idNumber) {
+                        showToast('Please fill all required fields', 'error');
+                        return false;
+                    }
+                    return true;
+                case 3:
+                    const proofType = document.getElementById('kyc-proof-type').value;
+                    
+                    if (!proofType) {
+                        showToast('Please select proof type', 'error');
+                        return false;
+                    }
+                    return true;
+            }
+            return true;
+        }
+
+        function populateReviewContent() {
+            const reviewContent = document.getElementById('kyc-review-content');
+            reviewContent.innerHTML = `
+                <div style="margin-bottom: 1rem;">
+                    <strong>Personal Information:</strong><br>
+                    Name: ${document.getElementById('kyc-fullname').value}<br>
+                    DOB: ${document.getElementById('kyc-dob').value}<br>
+                    Nationality: ${document.getElementById('kyc-nationality').value}<br>
+                    Address: ${document.getElementById('kyc-address').value}
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <strong>ID Verification:</strong><br>
+                    Document Type: ${document.getElementById('kyc-id-type').value}<br>
+                    ID Number: ${document.getElementById('kyc-id-number').value}
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <strong>Address Proof:</strong><br>
+                    Document Type: ${document.getElementById('kyc-proof-type').value}
+                </div>
+                <p style="color: var(--gray); font-size: 0.9rem;">
+                    By submitting, you confirm that all information provided is accurate and complete.
+                    Verification may take 1-3 business days.
+                </p>
+            `;
+        }
+
+        async function submitKyc() {
+            try {
+                // Update user KYC status
+                await window.firestore.updateDoc(window.firestore.doc(window.db, 'users', currentUser.uid), {
+                    kycStatus: 'pending',
+                    kycSubmittedAt: new Date().toISOString()
+                });
+                
+                // Create KYC submission record
+                await window.firestore.addDoc(window.firestore.collection(window.db, 'kyc_submissions'), {
+                    userId: currentUser.uid,
+                    status: 'pending',
+                    submittedAt: new Date().toISOString(),
+                    personalInfo: {
+                        fullName: document.getElementById('kyc-fullname').value,
+                        dob: document.getElementById('kyc-dob').value,
+                        nationality: document.getElementById('kyc-nationality').value,
+                        address: document.getElementById('kyc-address').value
+                    },
+                    idInfo: {
+                        type: document.getElementById('kyc-id-type').value,
+                        number: document.getElementById('kyc-id-number').value
+                    },
+                    addressProof: {
+                        type: document.getElementById('kyc-proof-type').value
+                    }
+                });
+                
+                // Update UI
+                userData.kycStatus = 'pending';
+                updateUIWithUserData();
+                
+                // Show success message
+                showToast('KYC submitted successfully! Verification takes 1-3 business days.', 'success');
+                
+                // Reset KYC form and go back to dashboard
+                setTimeout(() => {
+                    switchSection('dashboard');
+                    resetKycForm();
+                }, 2000);
+                
+            } catch (error) {
+                showToast('Error submitting KYC: ' + error.message, 'error');
+            }
+        }
+
+        function resetKycForm() {
+            currentKycStep = 1;
+            document.querySelectorAll('.kyc-step').forEach((step, index) => {
+                step.classList.toggle('active', index === 0);
+            });
+            document.querySelectorAll('[id^="kyc-step"]').forEach((form, index) => {
+                form.style.display = index === 0 ? 'block' : 'none';
+            });
+            document.getElementById('kyc-personal-form').reset();
+            document.getElementById('kyc-id-form').reset();
+            document.getElementById('kyc-address-form').reset();
+        }
+
+        async function verifyEmail() {
+            if (!currentUser) return;
+            
+            try {
+                await window.sendEmailVerification(currentUser);
+                showToast('Verification email sent! Check your inbox.', 'success');
+            } catch (error) {
+                showToast('Error sending verification email: ' + error.message, 'error');
+            }
+        }
+
+        async function resetPassword(email) {
+            try {
+                await window.sendPasswordResetEmail(window.auth, email);
+                showAuthMessage('Password reset email sent! Check your inbox.', 'success');
+            } catch (error) {
+                showAuthMessage('Error sending password reset email: ' + error.message, 'error');
+            }
+        }
+
+        async function changePassword() {
+            if (!currentUser || !currentUser.email) return;
+            
+            try {
+                await window.sendPasswordResetEmail(window.auth, currentUser.email);
+                showToast('Password reset email sent! Check your inbox.', 'success');
+            } catch (error) {
+                showToast('Error sending password reset email: ' + error.message, 'error');
+            }
+        }
+
+        async function signOutUser() {
+            try {
+                await window.signOut(window.auth);
+                showToast('Successfully signed out!', 'success');
+            } catch (error) {
+                showToast('Error signing out: ' + error.message, 'error');
+            }
+        }
+
+        function updateEmailVerificationStatus() {
+            if (!currentUser) return;
+            
+            const verifyEmailBtn = document.getElementById('verify-email-btn');
+            if (currentUser.emailVerified) {
+                verifyEmailBtn.innerHTML = '<i class="fas fa-check-circle"></i> Email Verified';
+                verifyEmailBtn.disabled = true;
+            } else {
+                verifyEmailBtn.innerHTML = '<i class="fas fa-envelope"></i> Verify Email';
+                verifyEmailBtn.disabled = false;
+            }
+        }
+
+        function updatePlatformStatus() {
+            const now = new Date();
+            const statusIndicator = document.getElementById('status-indicator');
+            const statusText = document.getElementById('platform-status-text');
+            
+            // Platform is always open
+            statusIndicator.className = 'status-indicator status-open';
+            statusText.textContent = 'Trading Active • 24/7';
+        }
+
+        function generateReferralCode() {
+            return 'MACSUN-' + Math.random().toString(36).substr(2, 8).toUpperCase();
+        }
+
+        function copyReferralLink() {
+            const link = document.getElementById('referral-link');
+            navigator.clipboard.writeText(link.value).then(() => {
+                showToast('Referral link copied to clipboard!', 'success');
+            });
+        }
+
+        async function investPackage(packageName, amount) {
+            if (!currentUser) {
+                showToast('Please sign in to invest', 'error');
+                switchSection('signout');
+                return;
+            }
+            
+            if (userData.kycStatus !== 'verified') {
+                showToast('Please complete KYC verification first', 'error');
+                switchSection('kyc');
+                return;
+            }
+            
+            if (userData.balance < amount) {
+                showToast('Insufficient balance. Please deposit funds first.', 'error');
+                switchSection('deposit');
+                return;
+            }
+            
+            try {
+                // Calculate investment details based on package
+                let dailyReturn, contractDays;
+                switch(packageName) {
+                    case 'Home Solar Starter':
+                        dailyReturn = 1.5;
+                        contractDays = 30;
+                        break;
+                    case 'Commercial Solar Pro':
+                        dailyReturn = 2.0;
+                        contractDays = 45;
+                        break;
+                    case 'Industrial Solar Plus':
+                        dailyReturn = 2.5;
+                        contractDays = 60;
+                        break;
+                    default:
+                        dailyReturn = 1.5;
+                        contractDays = 30;
+                }
+                
+                const startDate = new Date();
+                const endDate = new Date(startDate.getTime() + contractDays * 24 * 60 * 60 * 1000);
+                
+                // Create investment record
+                await window.firestore.addDoc(window.firestore.collection(window.db, 'investments'), {
+                    userId: currentUser.uid,
+                    packageName: packageName,
+                    amount: amount,
+                    dailyReturn: dailyReturn,
+                    startDate: startDate.toISOString(),
+                    endDate: endDate.toISOString(),
+                    status: 'active',
+                    createdAt: new Date().toISOString()
+                });
+                
+                // Update user balance
+                const newBalance = userData.balance - amount;
+                await window.firestore.updateDoc(window.firestore.doc(window.db, 'users', currentUser.uid), {
+                    balance: newBalance
+                });
+                
+                // Update userData
+                userData.balance = newBalance;
+                
+                // Create transaction record
+                await window.firestore.addDoc(window.firestore.collection(window.db, 'transactions'), {
+                    userId: currentUser.uid,
+                    type: 'investment',
+                    amount: amount,
+                    status: 'completed',
+                    description: `Invested in ${packageName}`,
+                    timestamp: new Date().toISOString(),
+                    reference: 'INV-' + Date.now()
+                });
+                
+                showToast(`Successfully invested $${amount} in ${packageName}!`, 'success');
+                
+                // Refresh data
+                updateUIWithUserData();
+                loadDashboardData();
+                loadMyInvestments();
+                
+            } catch (error) {
+                showToast('Error processing investment: ' + error.message, 'error');
+            }
+        }
+
+        function showAuthMessage(message, type = 'error', formType = 'login') {
+            const messageElement = document.getElementById(formType === 'login' ? 'auth-message' : 'signup-message');
+            messageElement.textContent = message;
+            messageElement.className = `auth-message ${type}`;
+            messageElement.style.display = 'block';
+        }
+
+        function clearAuthMessages() {
+            document.getElementById('auth-message').style.display = 'none';
+            document.getElementById('signup-message').style.display = 'none';
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast';
+            
+            if (type === 'error') {
+                toast.style.background = 'linear-gradient(135deg, var(--danger), #EF476F)';
+            } else if (type === 'success') {
+                toast.style.background = 'linear-gradient(135deg, var(--success), #06D6A0)';
+            } else {
+                toast.style.background = 'linear-gradient(135deg, var(--primary), var(--primary-dark))';
+            }
+            
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
