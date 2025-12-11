@@ -1,0 +1,4478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MACSUN ENERGIES - Solar Investment Platform</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+      import { 
+        getAuth, 
+        signInWithEmailAndPassword, 
+        createUserWithEmailAndPassword, 
+        signOut,
+        sendEmailVerification,
+        sendPasswordResetEmail,
+        onAuthStateChanged
+      } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+      import { 
+        getFirestore,
+        collection,
+        doc,
+        setDoc,
+        getDoc,
+        updateDoc,
+        serverTimestamp,
+        query,
+        where,
+        getDocs,
+        addDoc,
+        increment
+      } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+      // Your updated Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyBBvZEoyxoPjTtlAD00JnJkqIB1rBGcZ4g",
+        authDomain: "macsun-energies.firebaseapp.com",
+        projectId: "macsun-energies",
+        storageBucket: "macsun-energies.firebasestorage.app",
+        messagingSenderId: "981368982920",
+        appId: "1:981368982920:web:5c74b036911acc0e213e3d"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+
+      window.auth = auth;
+      window.db = db;
+      window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+      window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+      window.signOut = signOut;
+      window.sendEmailVerification = sendEmailVerification;
+      window.sendPasswordResetEmail = sendPasswordResetEmail;
+      window.onAuthStateChanged = onAuthStateChanged;
+      window.firestore = {
+        collection, doc, setDoc, getDoc, updateDoc, serverTimestamp,
+        query, where, getDocs, addDoc, increment
+      };
+    </script>
+    
+    <style>
+        :root {
+            --primary: #FF6B35; /* Sunrise Orange */
+            --primary-light: #FF8E53;
+            --primary-dark: #E55A2B;
+            --secondary: #004E89; /* Ocean Blue */
+            --accent: #FFD166; /* Sun Yellow */
+            --success: #06D6A0;
+            --warning: #FFD166;
+            --danger: #EF476F;
+            --dark: #073B4C;
+            --light: #F8F9FA;
+            --gray: #6C757D;
+            --light-gray: #E9ECEF;
+            --card-bg: #FFFFFF;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.12);
+            --transition: all 0.3s ease;
+            --border-radius: 16px;
+            --sidebar-width: 280px;
+        }
+
+        .dark-mode {
+            --light: #121212;
+            --dark: #FFFFFF;
+            --card-bg: #1E1E1E;
+            --gray: #B0B0B0;
+            --light-gray: #2D2D2D;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            transition: var(--transition);
+            overflow-x: hidden;
+            max-width: 100%;
+        }
+
+        body.dark-mode {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        /* Header Styles */
+        .header {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-lg);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 4px solid var(--accent);
+            width: 100%;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .menu-toggle {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 28px;
+            height: 21px;
+            cursor: pointer;
+            transition: var(--transition);
+            z-index: 1001;
+        }
+
+        .menu-toggle span {
+            height: 3px;
+            width: 100%;
+            background-color: white;
+            border-radius: 3px;
+            transition: var(--transition);
+        }
+
+        .menu-toggle.active span:nth-child(1) {
+            transform: rotate(45deg) translate(6px, 6px);
+        }
+
+        .menu-toggle.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .menu-toggle.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(6px, -6px);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: white;
+        }
+
+        .logo-icon {
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--accent) 0%, var(--primary) 100%);
+            position: relative;
+            overflow: hidden;
+            animation: sunGlow 3s ease-in-out infinite alternate, rotateLogo 10s linear infinite;
+            border: 3px solid white;
+            box-shadow: 0 0 20px rgba(255, 209, 102, 0.5);
+        }
+
+        @keyframes sunGlow {
+            0% {
+                box-shadow: 0 0 20px rgba(255, 209, 102, 0.5);
+            }
+            100% {
+                box-shadow: 0 0 30px rgba(255, 209, 102, 0.8), 0 0 40px rgba(255, 209, 102, 0.4);
+            }
+        }
+
+        @keyframes rotateLogo {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .logo-icon img {
+            width: 70%;
+            height: 70%;
+            object-fit: contain;
+            filter: brightness(0) invert(1);
+        }
+
+        .logo-text {
+            background: linear-gradient(90deg, white, var(--accent), white);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            font-size: 1.2rem;
+        }
+
+        .logo-subtext {
+            font-size: 0.8rem;
+            opacity: 0.9;
+            font-weight: 500;
+            margin-left: 5px;
+            display: none;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .platform-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            white-space: nowrap;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-open {
+            background-color: var(--success);
+        }
+
+        .status-closed {
+            background-color: var(--danger);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .theme-toggle {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            flex-shrink: 0;
+        }
+
+        .theme-toggle:hover {
+            transform: rotate(30deg);
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .theme-toggle i {
+            font-size: 1rem;
+            color: white;
+        }
+
+        .notification {
+            position: relative;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+
+        .notification:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .notification i {
+            font-size: 1rem;
+            color: white;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: linear-gradient(135deg, var(--danger), #FF8FA3);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+            z-index: 2;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+
+        .user-profile-container {
+            position: relative;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 20px;
+            transition: var(--transition);
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            min-width: 0;
+        }
+
+        .user-info:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .user-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--primary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            flex-shrink: 0;
+        }
+
+        .user-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: white;
+            max-width: 100px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: none;
+        }
+
+        .user-level {
+            font-size: 0.7rem;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .user-profile-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            min-width: 280px;
+            width: 90vw;
+            max-width: 320px;
+            z-index: 1001;
+            margin-top: 10px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: var(--transition);
+            border: 1px solid var(--light-gray);
+            overflow: hidden;
+        }
+
+        .user-profile-dropdown.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .user-profile-header {
+            padding: 1.2rem;
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+            text-align: center;
+            position: relative;
+        }
+
+        .profile-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--primary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            color: white;
+            font-weight: 600;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .profile-name {
+            color: white;
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .profile-email {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+        }
+
+        .profile-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+
+        .user-profile-content {
+            padding: 1.2rem;
+        }
+
+        .profile-info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .profile-info-item {
+            background: var(--light);
+            padding: 10px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .profile-info-label {
+            color: var(--gray);
+            font-size: 0.75rem;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .profile-info-value {
+            color: var(--dark);
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .profile-actions {
+            padding: 1rem 1.2rem;
+            border-top: 1px solid var(--light-gray);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .profile-action-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            color: var(--dark);
+            cursor: pointer;
+            transition: var(--transition);
+            border-radius: 10px;
+            font-size: 0.85rem;
+            text-align: left;
+        }
+
+        .profile-action-btn:hover {
+            background: var(--light);
+        }
+
+        .profile-action-btn i {
+            width: 18px;
+            color: var(--primary);
+            font-size: 0.9rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: flex;
+            flex: 1;
+            position: relative;
+            min-height: calc(100vh - 70px);
+            width: 100%;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: linear-gradient(135deg, var(--secondary) 0%, #003A6F 100%);
+            box-shadow: var(--shadow-lg);
+            transition: transform 0.3s ease;
+            z-index: 999;
+            overflow-y: auto;
+            border-right: 4px solid var(--accent);
+            position: fixed;
+            top: 70px;
+            left: 0;
+            bottom: 0;
+            transform: translateX(-100%);
+            width: 280px;
+            max-width: 85%;
+        }
+
+        .sidebar.active {
+            transform: translateX(0);
+        }
+
+        .menu {
+            list-style: none;
+            padding: 1.5rem 0;
+            width: 100%;
+        }
+
+        .menu-item {
+            padding: 0.9rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            color: rgba(255, 255, 255, 0.85);
+            white-space: nowrap;
+            font-size: 0.9rem;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .menu-item.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .menu-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--accent);
+        }
+
+        .menu-item i {
+            width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+            font-size: 1rem;
+        }
+
+        /* Content Area */
+        .content {
+            flex: 1;
+            padding: 1.2rem;
+            overflow-y: auto;
+            transition: var(--transition);
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.4s ease;
+            width: 100%;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Dashboard Styles */
+        .welcome-message {
+            margin-bottom: 2rem;
+        }
+
+        .welcome-message h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.3;
+        }
+
+        .welcome-message p {
+            color: var(--gray);
+            font-size: 0.95rem;
+            max-width: 100%;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 1.2rem;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            border: 1px solid var(--light-gray);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-card h3 {
+            color: var(--gray);
+            font-size: 0.8rem;
+            margin-bottom: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card .value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .change {
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 600;
+        }
+
+        .positive { color: var(--success); }
+        .negative { color: var(--danger); }
+
+        /* Investment Packages */
+        .packages-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .package-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            border: 2px solid var(--light-gray);
+            position: relative;
+        }
+
+        .package-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-light);
+        }
+
+        .package-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: linear-gradient(135deg, var(--accent), var(--primary));
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            z-index: 2;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .package-header {
+            padding: 1.5rem;
+            background: linear-gradient(135deg, var(--secondary), #0056A3);
+            text-align: center;
+            position: relative;
+        }
+
+        .package-image {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1rem;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .package-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .package-title {
+            color: white;
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .package-subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+        }
+
+        .package-content {
+            padding: 1.5rem;
+        }
+
+        .package-features {
+            margin: 1.2rem 0;
+        }
+
+        .package-feature {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            color: var(--dark);
+            font-size: 0.9rem;
+        }
+
+        .package-feature i {
+            color: var(--success);
+            font-size: 0.85rem;
+        }
+
+        .package-price {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-align: center;
+            margin: 1.2rem 0;
+        }
+
+        .package-price span {
+            font-size: 0.9rem;
+            color: var(--gray);
+            font-weight: 600;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #05C690);
+            color: white;
+            box-shadow: 0 4px 15px rgba(6, 214, 160, 0.3);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(6, 214, 160, 0.4);
+        }
+
+        .btn-block {
+            width: 100%;
+        }
+
+        /* Transaction History */
+        .transactions-table {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            margin-top: 1.5rem;
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .table-header {
+            background: linear-gradient(135deg, var(--secondary), #0056A3);
+            padding: 1.2rem;
+            color: white;
+        }
+
+        .table-header h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .table-content {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        th {
+            padding: 1rem 0.8rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--gray);
+            border-bottom: 1px solid var(--light-gray);
+            background: var(--light);
+            font-size: 0.85rem;
+        }
+
+        td {
+            padding: 1rem 0.8rem;
+            border-bottom: 1px solid var(--light-gray);
+            color: var(--dark);
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+        tr:hover {
+            background: var(--light);
+        }
+
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+
+        .status-completed { background: rgba(6, 214, 160, 0.1); color: var(--success); }
+        .status-pending { background: rgba(255, 209, 102, 0.1); color: var(--warning); }
+        .status-failed { background: rgba(239, 71, 111, 0.1); color: var(--danger); }
+
+        /* KYC Verification */
+        .kyc-container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        .kyc-steps {
+            display: flex;
+            justify-content: space-between;
+            margin: 1.5rem 0;
+            position: relative;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .kyc-steps::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 10%;
+            right: 10%;
+            height: 3px;
+            background: var(--light-gray);
+            z-index: 1;
+            display: none;
+        }
+
+        .kyc-step {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            flex: 1;
+            min-width: 80px;
+        }
+
+        .step-circle {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: var(--light-gray);
+            color: var(--gray);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 8px;
+            font-weight: 700;
+            transition: var(--transition);
+            font-size: 0.9rem;
+        }
+
+        .kyc-step.active .step-circle {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+        }
+
+        .kyc-step.completed .step-circle {
+            background: var(--success);
+            color: white;
+        }
+
+        .step-label {
+            font-size: 0.8rem;
+            color: var(--gray);
+            font-weight: 600;
+        }
+
+        .kyc-step.active .step-label {
+            color: var(--primary);
+        }
+
+        .kyc-form-container {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            margin-top: 1.5rem;
+            width: 100%;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.6rem;
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--light-gray);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: var(--transition);
+            background: var(--card-bg);
+            color: var(--dark);
+            -webkit-appearance: none;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+        }
+
+        .file-upload {
+            border: 2px dashed var(--light-gray);
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .file-upload:hover {
+            border-color: var(--primary);
+            background: rgba(255, 107, 53, 0.02);
+        }
+
+        .file-upload i {
+            font-size: 2.5rem;
+            color: var(--gray);
+            margin-bottom: 0.8rem;
+        }
+
+        .file-upload p {
+            color: var(--gray);
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .file-upload small {
+            color: var(--gray);
+            font-size: 0.8rem;
+        }
+
+        /* Login/Signup Styles */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+            padding: 1rem;
+        }
+
+        .login-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--shadow-lg);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .login-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .login-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 1rem;
+        }
+
+        .login-logo .logo-icon {
+            width: 50px;
+            height: 50px;
+        }
+
+        .login-title {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-subtitle {
+            color: var(--gray);
+            font-size: 1rem;
+        }
+
+        .auth-message {
+            padding: 0.9rem;
+            border-radius: 10px;
+            margin-bottom: 1.2rem;
+            font-size: 0.85rem;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .auth-message.success {
+            background: rgba(6, 214, 160, 0.1);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .auth-message.error {
+            background: rgba(239, 71, 111, 0.1);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
+        .auth-message.warning {
+            background: rgba(255, 209, 102, 0.1);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 1.5rem 0;
+            color: var(--gray);
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        .divider span {
+            padding: 0 0.8rem;
+            font-size: 0.85rem;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 998;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+        }
+
+        .overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            left: 20px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 0.9rem 1.2rem;
+            border-radius: 10px;
+            box-shadow: var(--shadow-lg);
+            z-index: 1100;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* About Section Styles */
+        .about-content {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            margin-top: 1.5rem;
+        }
+
+        .about-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .about-header h2 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .about-description {
+            color: var(--gray);
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .blog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .blog-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .blog-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .blog-image {
+            width: 100%;
+            height: 180px;
+            overflow: hidden;
+        }
+
+        .blog-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .blog-card:hover .blog-image img {
+            transform: scale(1.05);
+        }
+
+        .blog-content {
+            padding: 1.2rem;
+        }
+
+        .blog-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .blog-text {
+            color: var(--gray);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .conversion-notice {
+            background: rgba(255, 209, 102, 0.1);
+            border-left: 4px solid var(--accent);
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+
+        .conversion-notice i {
+            color: var(--accent);
+            margin-right: 8px;
+        }
+
+        /* Currency Converter */
+        .currency-converter {
+            background: var(--light);
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+            border: 2px solid var(--primary-light);
+        }
+
+        .currency-display {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px dashed var(--light-gray);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1100;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            animation: slideUp 0.3s ease;
+        }
+
+        .modal-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h3 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--gray);
+            cursor: pointer;
+        }
+
+        /* Investment Rotation Animation */
+        .rotating-investment {
+            animation: rotateEarn 20s linear infinite;
+            position: relative;
+        }
+
+        @keyframes rotateEarn {
+            0% { transform: rotateY(0deg); }
+            100% { transform: rotateY(360deg); }
+        }
+
+        .investment-visual {
+            width: 100%;
+            height: 200px;
+            position: relative;
+            perspective: 1000px;
+            margin: 1rem 0;
+        }
+
+        .investment-visual-inner {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.8s;
+            transform-style: preserve-3d;
+            animation: rotateEarn 20s linear infinite;
+        }
+
+        .investment-visual-front, 
+        .investment-visual-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 2rem;
+        }
+
+        .investment-visual-front {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .investment-visual-back {
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            color: white;
+            transform: rotateY(180deg);
+        }
+
+        /* Download Section */
+        .download-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .download-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            border: 2px solid var(--light-gray);
+            cursor: pointer;
+        }
+
+        .download-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+        }
+
+        .download-icon {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .download-card h3 {
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .download-card p {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        /* Mobile-specific adjustments */
+        @media (max-width: 768px) {
+            .header {
+                padding: 0.8rem 1rem;
+            }
+            
+            .logo-text {
+                font-size: 1.1rem;
+            }
+            
+            .user-name {
+                display: none;
+            }
+            
+            .platform-status {
+                font-size: 0.75rem;
+                padding: 5px 10px;
+            }
+            
+            .content {
+                padding: 1rem;
+            }
+            
+            .welcome-message h1 {
+                font-size: 1.5rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.8rem;
+            }
+            
+            .stat-card {
+                padding: 1rem;
+            }
+            
+            .stat-card .value {
+                font-size: 1.3rem;
+            }
+            
+            .packages-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .package-card {
+                margin-bottom: 0.5rem;
+            }
+            
+            table {
+                font-size: 0.85rem;
+            }
+            
+            th, td {
+                padding: 0.8rem 0.5rem;
+            }
+            
+            .kyc-steps {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 20px;
+            }
+            
+            .kyc-steps::before {
+                display: none;
+            }
+            
+            .kyc-step {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                width: 100%;
+                text-align: left;
+            }
+            
+            .step-circle {
+                margin: 0;
+            }
+            
+            .login-card {
+                padding: 1.5rem;
+            }
+            
+            .login-title {
+                font-size: 1.8rem;
+            }
+            
+            .btn {
+                padding: 12px 20px;
+                font-size: 0.9rem;
+            }
+            
+            .user-profile-dropdown {
+                width: 95vw;
+                right: -10px;
+            }
+            
+            .blog-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .download-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .modal-content {
+                padding: 1.5rem;
+                width: 95%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-right {
+                gap: 8px;
+            }
+            
+            .platform-status {
+                display: none;
+            }
+            
+            .theme-toggle,
+            .notification {
+                width: 35px;
+                height: 35px;
+            }
+            
+            .user-avatar {
+                width: 30px;
+                height: 30px;
+                font-size: 0.8rem;
+            }
+            
+            .logo {
+                font-size: 1rem;
+            }
+            
+            .logo-icon {
+                width: 40px;
+                height: 40px;
+            }
+            
+            .welcome-message h1 {
+                font-size: 1.3rem;
+            }
+            
+            .package-header {
+                padding: 1.2rem;
+            }
+            
+            .package-title {
+                font-size: 1.2rem;
+            }
+        }
+
+        /* Landscape mode adjustments */
+        @media (max-height: 600px) and (orientation: landscape) {
+            .login-container {
+                padding: 1rem;
+            }
+            
+            .login-card {
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+        }
+
+        /* Prevent zoom on input focus for mobile */
+        @media (max-width: 768px) {
+            input, select, textarea {
+                font-size: 16px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Page -->
+    <div id="login-page" class="login-container">
+        <div class="login-card" id="login-card">
+            <div class="login-header">
+                <div class="login-logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-sun"></i>
+                    </div>
+                    <div>
+                        <h1 class="login-title">MACSUN ENERGIES</h1>
+                        <p class="login-subtitle">Harness the power of the sun for sustainable investments</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="auth-message" class="auth-message"></div>
+            
+            <form id="login-form">
+                <div class="form-group">
+                    <input type="email" id="login-email" class="form-control" placeholder="Email address" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="login-password" class="form-control" placeholder="Password" required>
+                </div>
+                <div style="text-align: right; margin-bottom: 1.5rem;">
+                    <a href="#" id="forgot-password" style="color: var(--primary); text-decoration: none; font-weight: 600;">Forgot Password?</a>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block" id="login-btn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Sign In
+                </button>
+            </form>
+            
+            <p style="margin-top: 2rem; color: var(--gray);">
+                Don't have an account? <a href="#" id="show-signup" style="color: var(--primary); text-decoration: none; font-weight: 600;">Sign up</a>
+            </p>
+        </div>
+
+        <!-- Sign Up Card -->
+        <div class="login-card" id="signup-card" style="display: none;">
+            <div class="login-header">
+                <div class="login-logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-sun"></i>
+                    </div>
+                    <div>
+                        <h1 class="login-title">Join MACSUN</h1>
+                        <p class="login-subtitle">Start your solar investment journey</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="signup-message" class="auth-message"></div>
+            
+            <form id="signup-form">
+                <div class="form-group">
+                    <input type="text" id="signup-name" class="form-control" placeholder="Full Name" required>
+                </div>
+                <div class="form-group">
+                    <input type="email" id="signup-email" class="form-control" placeholder="Email address" required>
+                </div>
+                <div class="form-group">
+                    <input type="tel" id="signup-phone" class="form-control" placeholder="Phone Number" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="signup-password" class="form-control" placeholder="Password (min. 8 characters)" required minlength="8">
+                </div>
+                <div class="form-group">
+                    <input type="password" id="signup-confirm-password" class="form-control" placeholder="Confirm Password" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="signup-withdraw-password" class="form-control" placeholder="Withdrawal Password (min. 4 digits)" required minlength="4">
+                </div>
+                <div class="form-group">
+                    <select id="signup-country" class="form-control" required>
+                        <option value="">Select Country</option>
+                        <option value="GH">Ghana</option>
+                        <option value="NG">Nigeria</option>
+                        <option value="KE">Kenya</option>
+                        <option value="ZA">South Africa</option>
+                        <option value="US">United States</option>
+                        <option value="UK">United Kingdom</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: flex-start; font-size: 0.9rem; color: var(--gray); cursor: pointer;">
+                        <input type="checkbox" id="terms-agreement" required style="margin: 4px 10px 0 0; flex-shrink: 0;">
+                        <span>I agree to the <a href="#" style="color: var(--primary);">Terms of Service</a>, <a href="#" style="color: var(--primary);">Privacy Policy</a>, and confirm that I am at least 18 years old.</span>
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block" id="signup-btn">
+                    <i class="fas fa-user-plus"></i>
+                    Create Account
+                </button>
+            </form>
+            
+            <p style="margin-top: 2rem; color: var(--gray);">
+                Already have an account? <a href="#" id="show-login" style="color: var(--primary); text-decoration: none; font-weight: 600;">Sign in</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard-page" class="app-container" style="display: none;">
+        <header class="header">
+            <div class="header-left">
+                <div class="menu-toggle" id="menu-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <div class="logo-container">
+                    <div class="logo">
+                        <div class="logo-icon">
+                            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="50" cy="50" r="45" fill="#FFD166"/>
+                                <circle cx="50" cy="50" r="35" fill="#FF6B35"/>
+                                <path d="M50 10 L50 90 M10 50 L90 50 M25 25 L75 75 M75 25 L25 75" stroke="#004E89" stroke-width="6" stroke-linecap="round"/>
+                                <circle cx="50" cy="50" r="15" fill="#004E89"/>
+                            </svg>
+                        </div>
+                        <span class="logo-text">MACSUN ENERGIES</span>
+                        <span class="logo-subtext">Solar Investments</span>
+                    </div>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="platform-status" id="platform-status">
+                    <div class="status-indicator status-open" id="status-indicator"></div>
+                    <span id="platform-status-text">Checking hours...</span>
+                </div>
+                <div class="theme-toggle" id="theme-toggle">
+                    <i class="fas fa-moon"></i>
+                </div>
+                <div class="notification">
+                    <i class="fas fa-bell"></i>
+                    <div class="notification-badge">2</div>
+                </div>
+                <div class="user-profile-container">
+                    <div class="user-info" id="user-info-toggle">
+                        <div class="user-avatar" id="user-avatar">U</div>
+                        <div>
+                            <div class="user-name" id="user-display-name">User</div>
+                            <div class="user-level" id="user-level">Basic</div>
+                        </div>
+                    </div>
+                    <div class="user-profile-dropdown" id="user-profile-dropdown">
+                        <div class="user-profile-header">
+                            <div class="profile-avatar" id="profile-avatar">U</div>
+                            <h3 class="profile-name" id="profile-name">User</h3>
+                            <p class="profile-email" id="profile-email">user@example.com</p>
+                            <div class="profile-badge" id="uid-display">
+                                <i class="fas fa-id-card"></i>
+                                <span id="uid-text">Loading...</span>
+                            </div>
+                            <div class="profile-badge" id="kyc-status-badge">
+                                <i class="fas fa-shield-alt"></i>
+                                <span>KYC: Not Verified</span>
+                            </div>
+                        </div>
+                        <div class="user-profile-content">
+                            <div class="profile-info-grid">
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">Current Account</div>
+                                    <div class="profile-info-value" id="current-account-balance">¥0.00</div>
+                                </div>
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">Bonus Account</div>
+                                    <div class="profile-info-value" id="bonus-account-balance">¥0.00</div>
+                                </div>
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">Active Plans</div>
+                                    <div class="profile-info-value" id="active-plans-count">0</div>
+                                </div>
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">Member Since</div>
+                                    <div class="profile-info-value" id="member-since">Today</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="profile-actions">
+                            <button class="profile-action-btn" id="verify-email-btn">
+                                <i class="fas fa-envelope"></i>
+                                Verify Email
+                            </button>
+                            <button class="profile-action-btn" id="kyc-verification-btn">
+                                <i class="fas fa-id-card"></i>
+                                Complete KYC
+                            </button>
+                            <button class="profile-action-btn" id="download-app-btn">
+                                <i class="fas fa-download"></i>
+                                Download App
+                            </button>
+                            <button class="profile-action-btn" id="profile-signout">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Sign Out
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="overlay" id="overlay"></div>
+        <div class="toast" id="toast"></div>
+
+        <!-- Withdrawal Password Modal -->
+        <div class="modal" id="withdraw-password-modal">
+            <div class="modal-content">
+                <button class="modal-close" id="close-withdraw-modal">&times;</button>
+                <div class="modal-header">
+                    <h3>Enter Withdrawal Password</h3>
+                    <p>Please enter your 4-digit withdrawal password to proceed</p>
+                </div>
+                <form id="withdraw-password-form">
+                    <div class="form-group">
+                        <input type="password" id="withdraw-password-input" class="form-control" placeholder="Enter 4-digit withdrawal password" maxlength="4" pattern="\d{4}" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-unlock"></i>
+                        Verify & Proceed
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <aside class="sidebar" id="sidebar">
+                <ul class="menu">
+                    <li class="menu-item active" data-target="dashboard">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Dashboard</span>
+                    </li>
+                    <li class="menu-item" data-target="invest">
+                        <i class="fas fa-solar-panel"></i>
+                        <span>Investments</span>
+                    </li>
+                    <li class="menu-item" data-target="my-investments">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>My Earns</span>
+                    </li>
+                    <li class="menu-item" data-target="transactions">
+                        <i class="fas fa-exchange-alt"></i>
+                        <span>Transactions</span>
+                    </li>
+                    <li class="menu-item" data-target="deposit">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Deposit</span>
+                    </li>
+                    <li class="menu-item" data-target="withdraw">
+                        <i class="fas fa-wallet"></i>
+                        <span>Withdraw</span>
+                    </li>
+                    <li class="menu-item" data-target="kyc">
+                        <i class="fas fa-id-card"></i>
+                        <span>KYC Verification</span>
+                    </li>
+                    <li class="menu-item" data-target="referral">
+                        <i class="fas fa-users"></i>
+                        <span>Referral Program</span>
+                    </li>
+                    <li class="menu-item" data-target="download">
+                        <i class="fas fa-download"></i>
+                        <span>Download App</span>
+                    </li>
+                    <li class="menu-item" data-target="about">
+                        <i class="fas fa-info-circle"></i>
+                        <span>About Us</span>
+                    </li>
+                    <li class="menu-item" data-target="chat-admin">
+                        <i class="fas fa-headset"></i>
+                        <span>Chat Admin</span>
+                    </li>
+                    <li class="menu-item" data-target="settings">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </li>
+                    <li class="menu-item" data-target="signout">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Sign Out</span>
+                    </li>
+                </ul>
+            </aside>
+
+            <div class="content" id="content">
+                <!-- Dashboard Section -->
+                <section id="dashboard" class="section active">
+                    <div class="welcome-message">
+                        <h1 id="dashboard-welcome">Welcome to Solar Investments</h1>
+                        <p>Track your renewable energy investments and earnings in real-time</p>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3>Current Account</h3>
+                            <div class="value" id="total-balance">¥0.00</div>
+                            <div class="change positive">
+                                <i class="fas fa-arrow-up"></i>
+                                <span>Ready to invest</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Bonus Account</h3>
+                            <div class="value" id="bonus-balance">¥0.00</div>
+                            <div class="change">
+                                <span>Promotional funds</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Active Investments</h3>
+                            <div class="value" id="active-investments">0</div>
+                            <div class="change">
+                                <span>Start investing today</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Daily Earnings</h3>
+                            <div class="value" id="daily-earnings">¥0.00</div>
+                            <div class="change">
+                                <span>Will update after investment</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="welcome-message">
+                        <h2>Quick Actions</h2>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card" style="cursor: pointer;" onclick="switchSection('deposit')">
+                            <h3><i class="fas fa-plus-circle"></i> Deposit Funds</h3>
+                            <p style="color: var(--gray); margin-top: 10px; font-size: 0.85rem;">Add funds to start investing in solar projects</p>
+                        </div>
+                        <div class="stat-card" style="cursor: pointer;" onclick="switchSection('invest')">
+                            <h3><i class="fas fa-solar-panel"></i> Start Investing</h3>
+                            <p style="color: var(--gray); margin-top: 10px; font-size: 0.85rem;">Choose from our solar investment packages</p>
+                        </div>
+                        <div class="stat-card" style="cursor: pointer;" onclick="switchSection('kyc')">
+                            <h3><i class="fas fa-id-card"></i> Complete KYC</h3>
+                            <p style="color: var(--gray); margin-top: 10px; font-size: 0.85rem;">Verify your identity to unlock full features</p>
+                        </div>
+                        <div class="stat-card" style="cursor: pointer;" onclick="switchSection('download')">
+                            <h3><i class="fas fa-download"></i> Download App</h3>
+                            <p style="color: var(--gray); margin-top: 10px; font-size: 0.85rem;">Get our app for better experience</p>
+                        </div>
+                    </div>
+
+                    <div class="welcome-message">
+                        <h2>Recent Transactions</h2>
+                    </div>
+
+                    <div class="transactions-table">
+                        <div class="table-header">
+                            <h3>Latest Activity</h3>
+                        </div>
+                        <div class="table-content">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Type</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-transactions">
+                                    <tr>
+                                        <td colspan="5" style="text-align: center; padding: 3rem; color: var(--gray);">
+                                            <i class="fas fa-exchange-alt" style="font-size: 2rem; margin-bottom: 1rem; display: block; opacity: 0.5;"></i>
+                                            No transactions yet
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Invest Section -->
+                <section id="invest" class="section">
+                    <div class="welcome-message">
+                        <h1>Solar Investment Packages</h1>
+                        <p>Choose from our carefully curated solar energy investment plans with 3D panels</p>
+                        <div class="conversion-notice">
+                            <i class="fas fa-info-circle"></i>
+                            All amounts are in Chinese Yuan (¥). Convert from USD: $1 = ¥10. Minimum deposit: $10 = ¥100 = GH₵200
+                        </div>
+                    </div>
+
+                    <div class="packages-grid">
+                        <!-- Package 1: 100 Yuan / $10 -->
+                        <div class="package-card">
+                            <div class="package-badge">Basic 3D</div>
+                            <div class="package-header">
+                                <div class="package-image">
+                                    <i class="fas fa-cube" style="font-size: 2.5rem; color: var(--secondary);"></i>
+                                </div>
+                                <h3 class="package-title">3D Solar Starter</h3>
+                                <p class="package-subtitle">Entry-level 3D panel</p>
+                            </div>
+                            <div class="package-content">
+                                <div class="package-features">
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Daily Return: 2.5%</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Contract Period: 60 days</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Total Return: 150%</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>24/7 3D Monitoring</span>
+                                    </div>
+                                </div>
+                                <div class="package-price">
+                                    ¥100 <span>≈ $10 ≈ GH₵200</span>
+                                </div>
+                                <button class="btn btn-primary btn-block" onclick="investPackage('3D Solar Starter', 100, 2.5)">
+                                    <i class="fas fa-solar-panel"></i>
+                                    Invest Now
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Package 2: 200 Yuan / $20 -->
+                        <div class="package-card">
+                            <div class="package-badge">Standard 3D</div>
+                            <div class="package-header">
+                                <div class="package-image">
+                                    <i class="fas fa-cubes" style="font-size: 2.5rem; color: var(--secondary);"></i>
+                                </div>
+                                <h3 class="package-title">3D Solar Advanced</h3>
+                                <p class="package-subtitle">Advanced 3D panel system</p>
+                            </div>
+                            <div class="package-content">
+                                <div class="package-features">
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Daily Return: 2.4%</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Contract Period: 60 days</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Total Return: 144%</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>3D Visualization</span>
+                                    </div>
+                                </div>
+                                <div class="package-price">
+                                    ¥200 <span>≈ $20 ≈ GH₵400</span>
+                                </div>
+                                <button class="btn btn-primary btn-block" onclick="investPackage('3D Solar Advanced', 200, 2.4)">
+                                    <i class="fas fa-solar-panel"></i>
+                                    Invest Now
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Package 3: 300 Yuan / $30 -->
+                        <div class="package-card">
+                            <div class="package-badge">Premium 3D</div>
+                            <div class="package-header">
+                                <div class="package-image">
+                                    <i class="fas fa-boxes" style="font-size: 2.5rem; color: var(--secondary);"></i>
+                                </div>
+                                <h3 class="package-title">3D Solar Premium</h3>
+                                <p class="package-subtitle">Premium 3D panel array</p>
+                            </div>
+                            <div class="package-content">
+                                <div class="package-features">
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Daily Return: 2.3%</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Contract Period: 60 days</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Total Return: 138%</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>3D Performance Tracking</span>
+                                    </div>
+                                </div>
+                                <div class="package-price">
+                                    ¥300 <span>≈ $30 ≈ GH₵600</span>
+                                </div>
+                                <button class="btn btn-primary btn-block" onclick="investPackage('3D Solar Premium', 300, 2.3)">
+                                    <i class="fas fa-solar-panel"></i>
+                                    Invest Now
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Package 4: 500 Yuan / $50 -->
+                        <div class="package-card">
+                            <div class="package-badge">Ultimate 3D</div>
+                            <div class="package-header">
+                                <div class="package-image">
+                                    <i class="fas fa-th-large" style="font-size: 2.5rem; color: var(--secondary);"></i>
+                                </div>
+                                <h3 class="package-title">3D Solar Ultimate</h3>
+                                <p class="package-subtitle">Ultimate 3D panel system</p>
+                            </div>
+                            <div class="package-content">
+                                <div class="package-features">
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Daily Return: 2.2%</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Contract Period: 60 days</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Total Return: 132%</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>3D Real-time Analytics</span>
+                                    </div>
+                                </div>
+                                <div class="package-price">
+                                    ¥500 <span>≈ $50 ≈ GH₵1000</span>
+                                </div>
+                                <button class="btn btn-primary btn-block" onclick="investPackage('3D Solar Ultimate', 500, 2.2)">
+                                    <i class="fas fa-solar-panel"></i>
+                                    Invest Now
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Package 5: 700 Yuan / $70 -->
+                        <div class="package-card">
+                            <div class="package-badge">Pro 3D</div>
+                            <div class="package-header">
+                                <div class="package-image">
+                                    <i class="fas fa-cube" style="font-size: 2.5rem; color: var(--secondary);"></i>
+                                </div>
+                                <h3 class="package-title">3D Solar Pro</h3>
+                                <p class="package-subtitle">Professional 3D panel network</p>
+                            </div>
+                            <div class="package-content">
+                                <div class="package-features">
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Daily Return: 2.1%</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Contract Period: 60 days</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Total Return: 126%</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>3D AI Optimization</span>
+                                    </div>
+                                </div>
+                                <div class="package-price">
+                                    ¥700 <span>≈ $70 ≈ GH₵1400</span>
+                                </div>
+                                <button class="btn btn-primary btn-block" onclick="investPackage('3D Solar Pro', 700, 2.1)">
+                                    <i class="fas fa-solar-panel"></i>
+                                    Invest Now
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Package 6: 1000 Yuan / $100 -->
+                        <div class="package-card">
+                            <div class="package-badge">Master 3D</div>
+                            <div class="package-header">
+                                <div class="package-image">
+                                    <i class="fas fa-cubes" style="font-size: 2.5rem; color: var(--secondary);"></i>
+                                </div>
+                                <h3 class="package-title">3D Solar Master</h3>
+                                <p class="package-subtitle">Master 3D panel installation</p>
+                            </div>
+                            <div class="package-content">
+                                <div class="package-features">
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Daily Return: 2.0%</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Contract Period: 60 days</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Total Return: 120%</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>3D VR Monitoring</span>
+                                    </div>
+                                </div>
+                                <div class="package-price">
+                                    ¥1000 <span>≈ $100 ≈ GH₵2000</span>
+                                </div>
+                                <button class="btn btn-primary btn-block" onclick="investPackage('3D Solar Master', 1000, 2.0)">
+                                    <i class="fas fa-solar-panel"></i>
+                                    Invest Now
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- My Investments Section (Renamed to My Earns) -->
+                <section id="my-investments" class="section">
+                    <div class="welcome-message">
+                        <h1>My Earns</h1>
+                        <p>Track your active solar investments and their performance</p>
+                    </div>
+
+                    <!-- Investment Visual Display -->
+                    <div class="investment-visual" id="investment-visual" style="display: none;">
+                        <div class="investment-visual-inner">
+                            <div class="investment-visual-front">
+                                <i class="fas fa-solar-panel" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                                <h3 id="visual-plan-name">Active Plan</h3>
+                                <p id="visual-plan-details">Loading details...</p>
+                            </div>
+                            <div class="investment-visual-back">
+                                <i class="fas fa-coins" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                                <h3>Daily Earnings</h3>
+                                <p id="visual-plan-earnings">¥0.00/day</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="transactions-table">
+                        <div class="table-header">
+                            <h3>Active Investments</h3>
+                        </div>
+                        <div class="table-content">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Package</th>
+                                        <th>Amount</th>
+                                        <th>Start Date</th>
+                                        <th>End Date</th>
+                                        <th>Daily Earnings</th>
+                                        <th>Total Earned</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="active-investments-list">
+                                    <tr>
+                                        <td colspan="7" style="text-align: center; padding: 3rem; color: var(--gray);">
+                                            <i class="fas fa-chart-bar" style="font-size: 2rem; margin-bottom: 1rem; display: block; opacity: 0.5;"></i>
+                                            No active investments
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Transactions Section -->
+                <section id="transactions" class="section">
+                    <div class="welcome-message">
+                        <h1>Transaction History</h1>
+                        <p>Complete history of all your deposits, withdrawals, and earnings</p>
+                    </div>
+
+                    <div class="transactions-table">
+                        <div class="table-header">
+                            <h3>All Transactions</h3>
+                        </div>
+                        <div class="table-content">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Date & Time</th>
+                                        <th>Type</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Reference</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="all-transactions">
+                                    <tr>
+                                        <td colspan="6" style="text-align: center; padding: 3rem; color: var(--gray);">
+                                            <i class="fas fa-exchange-alt" style="font-size: 2rem; margin-bottom: 1rem; display: block; opacity: 0.5;"></i>
+                                            No transaction history available
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Deposit Section -->
+                <section id="deposit" class="section">
+                    <div class="welcome-message">
+                        <h1>Deposit Funds</h1>
+                        <p>Add funds to your account to start investing</p>
+                        <div class="conversion-notice">
+                            <i class="fas fa-info-circle"></i>
+                            Minimum deposit: $10 = ¥100 = GH₵200
+                        </div>
+                    </div>
+
+                    <div class="kyc-form-container">
+                        <h2 style="margin-bottom: 1.5rem; color: var(--dark);">Make a Deposit</h2>
+                        
+                        <!-- Currency Converter -->
+                        <div class="currency-converter">
+                            <div class="form-group">
+                                <label>Currency Converter</label>
+                                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                                    <input type="number" id="usd-amount" class="form-control" placeholder="USD" oninput="convertCurrency('usd')" step="1" min="10">
+                                    <input type="number" id="cny-amount" class="form-control" placeholder="CNY" oninput="convertCurrency('cny')" step="100" min="100">
+                                    <input type="number" id="ghs-amount" class="form-control" placeholder="GHS" oninput="convertCurrency('ghs')" step="200" min="200">
+                                </div>
+                                <div style="text-align: center; font-size: 0.9rem; color: var(--gray);">
+                                    <div>Exchange Rate: $1 = ¥10 = GH₵20</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Payment Method Selection -->
+                        <div class="form-group">
+                            <label>Select Payment Method</label>
+                            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                                <button type="button" class="btn" id="select-momo" style="flex: 1;" onclick="selectPaymentMethod('momo')">
+                                    <i class="fas fa-mobile-alt"></i> Mobile Money
+                                </button>
+                                <button type="button" class="btn" id="select-crypto" style="flex: 1;" onclick="selectPaymentMethod('crypto')">
+                                    <i class="fab fa-bitcoin"></i> Cryptocurrency
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Mobile Money Payment Instructions -->
+                        <div id="momo-instructions" style="display: none;">
+                            <div style="background: var(--light); padding: 1rem; border-radius: 10px; margin-bottom: 1rem;">
+                                <h4 style="margin-bottom: 0.5rem; color: var(--dark);">Mobile Money Payment Instructions</h4>
+                                
+                                <div class="form-group">
+                                    <label>Select Network</label>
+                                    <select id="momo-network" class="form-control" onchange="updateMomoDetails()">
+                                        <option value="">Select network</option>
+                                        <option value="mtn">MTN Mobile Money</option>
+                                        <option value="telecel">Telecel Cash</option>
+                                    </select>
+                                </div>
+
+                                <!-- MTN Instructions -->
+                                <div id="mtn-details" style="display: none; padding: 1rem; background: rgba(255, 209, 102, 0.1); border-radius: 8px; margin-bottom: 1rem;">
+                                    <h5><i class="fas fa-info-circle"></i> MTN Mobile Money Instructions:</h5>
+                                    <ol style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                                        <li>Dial *170# on your MTN line</li>
+                                        <li>Select "Send Money"</li>
+                                        <li>Enter recipient number: <strong>0537090034</strong></li>
+                                        <li>Enter amount: <span id="mtn-amount-display">¥0</span></li>
+                                        <li>Recipient Name: <strong>SHALOM DONKOR</strong></li>
+                                        <li>Complete transaction and copy the <strong>Transaction ID</strong></li>
+                                    </ol>
+                                    <p style="margin-top: 0.5rem; color: var(--warning);">
+                                        <i class="fas fa-exclamation-triangle"></i> Transactions show as pending until admin approval
+                                    </p>
+                                </div>
+
+                                <!-- Telecel Instructions -->
+                                <div id="telecel-details" style="display: none; padding: 1rem; background: rgba(255, 209, 102, 0.1); border-radius: 8px; margin-bottom: 1rem;">
+                                    <h5><i class="fas fa-info-circle"></i> Telecel Cash Instructions:</h5>
+                                    <ol style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                                        <li>Dial *110# on your Telecel line</li>
+                                        <li>Select "Send Money"</li>
+                                        <li>Enter recipient number: <strong>0202745325</strong></li>
+                                        <li>Enter amount: <span id="telecel-amount-display">¥0</span></li>
+                                        <li>Recipient Name: <strong>Mercy Quaicoe</strong></li>
+                                        <li>Complete transaction and copy the <strong>Transaction ID</strong></li>
+                                    </ol>
+                                    <p style="margin-top: 0.5rem; color: var(--warning);">
+                                        <i class="fas fa-exclamation-triangle"></i> Transactions show as pending until admin approval
+                                    </p>
+                                </div>
+
+                                <form id="momo-deposit-form">
+                                    <div class="form-group">
+                                        <label for="transaction-id">Transaction ID</label>
+                                        <input type="text" id="transaction-id" class="form-control" placeholder="Enter transaction ID from mobile money" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="momo-amount-confirm">Amount Sent</label>
+                                        <input type="number" id="momo-amount-confirm" class="form-control" placeholder="Confirm amount sent" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-block">
+                                        <i class="fas fa-check-circle"></i>
+                                        Submit Deposit Request
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Cryptocurrency Payment Instructions -->
+                        <div id="crypto-instructions" style="display: none;">
+                            <div style="background: var(--light); padding: 1rem; border-radius: 10px; margin-bottom: 1rem;">
+                                <h4 style="margin-bottom: 0.5rem; color: var(--dark);">Cryptocurrency Payment Instructions</h4>
+                                
+                                <div class="form-group">
+                                    <label>Select Blockchain Network</label>
+                                    <select id="crypto-network" class="form-control" onchange="updateCryptoDetails()">
+                                        <option value="">Select network</option>
+                                        <option value="erc20">ERC-20 (Ethereum)</option>
+                                        <option value="bnb">BNB Chain</option>
+                                    </select>
+                                </div>
+
+                                <!-- ERC-20 Details -->
+                                <div id="erc20-details" style="display: none; padding: 1rem; background: rgba(255, 209, 102, 0.1); border-radius: 8px; margin-bottom: 1rem;">
+                                    <h5><i class="fab fa-ethereum"></i> ERC-20 Wallet Details:</h5>
+                                    <div style="word-break: break-all; background: rgba(0,0,0,0.05); padding: 0.8rem; border-radius: 8px; margin: 0.5rem 0;">
+                                        <strong>Wallet Address:</strong><br>
+                                        0x742d35Cc6634C0532925a3b844Bc9eE3a5C2f5e1
+                                    </div>
+                                    <p style="margin-top: 0.5rem; font-size: 0.9rem;">
+                                        <i class="fas fa-exclamation-triangle"></i> Send only ETH or ERC-20 tokens to this address
+                                    </p>
+                                    <p style="margin-top: 0.5rem; color: var(--warning);">
+                                        <i class="fas fa-exclamation-triangle"></i> Transactions require 12 network confirmations
+                                    </p>
+                                </div>
+
+                                <!-- BNB Chain Details -->
+                                <div id="bnb-details" style="display: none; padding: 1rem; background: rgba(255, 209, 102, 0.1); border-radius: 8px; margin-bottom: 1rem;">
+                                    <h5><i class="fab fa-btc"></i> BNB Chain Wallet Details:</h5>
+                                    <div style="word-break: break-all; background: rgba(0,0,0,0.05); padding: 0.8rem; border-radius: 8px; margin: 0.5rem 0;">
+                                        <strong>Wallet Address:</strong><br>
+                                        bnb1q7f4y8d3p2r5v6t9y0u1i2o3a4s5d6f7g8h9j0k
+                                    </div>
+                                    <p style="margin-top: 0.5rem; font-size: 0.9rem;">
+                                        <i class="fas fa-exclamation-triangle"></i> Send only BNB or BEP-20 tokens to this address
+                                    </p>
+                                    <p style="margin-top: 0.5rem; color: var(--warning);">
+                                        <i class="fas fa-exclamation-triangle"></i> Transactions require 15 network confirmations
+                                    </p>
+                                </div>
+
+                                <form id="crypto-deposit-form">
+                                    <div class="form-group">
+                                        <label for="tx-hash">Transaction Hash</label>
+                                        <input type="text" id="tx-hash" class="form-control" placeholder="Enter transaction hash from blockchain" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="crypto-amount">Amount Sent (in cryptocurrency)</label>
+                                        <input type="number" id="crypto-amount" class="form-control" placeholder="Enter amount sent" step="0.000001" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-block">
+                                        <i class="fas fa-check-circle"></i>
+                                        Submit Deposit Request
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Withdraw Section -->
+                <section id="withdraw" class="section">
+                    <div class="welcome-message">
+                        <h1>Withdraw Funds</h1>
+                        <p>Withdraw your earnings to your preferred payment method</p>
+                        <div class="conversion-notice">
+                            <i class="fas fa-info-circle"></i>
+                            Minimum withdrawal: $10 = ¥100 = GH₵200. Bonus account minimum: ¥100
+                        </div>
+                    </div>
+
+                    <div class="kyc-form-container">
+                        <h2 style="margin-bottom: 1.5rem; color: var(--dark);">Request Withdrawal</h2>
+                        
+                        <!-- Currency Converter -->
+                        <div class="currency-converter">
+                            <div class="form-group">
+                                <label>Currency Converter</label>
+                                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                                    <input type="number" id="withdraw-usd" class="form-control" placeholder="USD" oninput="convertWithdrawCurrency('usd')" step="1" min="10">
+                                    <input type="number" id="withdraw-cny" class="form-control" placeholder="CNY" oninput="convertWithdrawCurrency('cny')" step="100" min="100">
+                                    <input type="number" id="withdraw-ghs" class="form-control" placeholder="GHS" oninput="convertWithdrawCurrency('ghs')" step="200" min="200">
+                                </div>
+                                <div style="text-align: center; font-size: 0.9rem; color: var(--gray);">
+                                    <div>Exchange Rate: $1 = ¥10 = GH₵20</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <form id="withdraw-form">
+                            <div class="form-group">
+                                <label for="withdraw-account">Select Account</label>
+                                <select id="withdraw-account" class="form-control" required onchange="updateWithdrawLimits()">
+                                    <option value="">Select account</option>
+                                    <option value="current">Current Account</option>
+                                    <option value="bonus">Bonus Account</option>
+                                </select>
+                                <div style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--gray);">
+                                    <div>Current Account Balance: <span id="current-balance-display">¥0.00</span></div>
+                                    <div>Bonus Account Balance: <span id="bonus-balance-display">¥0.00</span></div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="withdraw-method">Withdrawal Method</label>
+                                <select id="withdraw-method" class="form-control" required>
+                                    <option value="">Select method</option>
+                                    <option value="bank-transfer">Bank Transfer</option>
+                                    <option value="mobile-money">Mobile Money</option>
+                                    <option value="crypto">Cryptocurrency</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="account-details">Account Details</label>
+                                <input type="text" id="account-details" class="form-control" placeholder="Enter account number or wallet address" required>
+                            </div>
+                            
+                            <button type="button" class="btn btn-primary btn-block" onclick="requestWithdrawal()">
+                                <i class="fas fa-paper-plane"></i>
+                                Request Withdrawal
+                            </button>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- KYC Verification Section -->
+                <section id="kyc" class="section">
+                    <div class="welcome-message">
+                        <h1>KYC Verification</h1>
+                        <p>Verify your identity to unlock all platform features</p>
+                    </div>
+
+                    <div class="kyc-container">
+                        <div class="kyc-steps">
+                            <div class="kyc-step active" id="step1">
+                                <div class="step-circle">1</div>
+                                <div class="step-label">Personal Info</div>
+                            </div>
+                            <div class="kyc-step" id="step2">
+                                <div class="step-circle">2</div>
+                                <div class="step-label">ID Verification</div>
+                            </div>
+                            <div class="kyc-step" id="step3">
+                                <div class="step-circle">3</div>
+                                <div class="step-label">Address Proof</div>
+                            </div>
+                            <div class="kyc-step" id="step4">
+                                <div class="step-circle">4</div>
+                                <div class="step-label">Review</div>
+                            </div>
+                        </div>
+
+                        <div id="kyc-step-content">
+                            <!-- Step 1: Personal Info -->
+                            <div class="kyc-form-container" id="kyc-step1">
+                                <h2 style="margin-bottom: 1.5rem; color: var(--dark);">Personal Information</h2>
+                                <form id="kyc-personal-form">
+                                    <div class="form-group">
+                                        <label for="kyc-fullname">Full Legal Name</label>
+                                        <input type="text" id="kyc-fullname" class="form-control" placeholder="As shown on your ID" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="kyc-dob">Date of Birth</label>
+                                        <input type="date" id="kyc-dob" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="kyc-nationality">Nationality</label>
+                                        <input type="text" id="kyc-nationality" class="form-control" placeholder="Your nationality" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="kyc-address">Residential Address</label>
+                                        <textarea id="kyc-address" class="form-control" rows="3" placeholder="Your complete address" required></textarea>
+                                    </div>
+                                    <button type="button" class="btn btn-primary btn-block" onclick="nextKycStep(2)">
+                                        Continue to Step 2
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- Step 2: ID Verification -->
+                            <div class="kyc-form-container" id="kyc-step2" style="display: none;">
+                                <h2 style="margin-bottom: 1.5rem; color: var(--dark);">ID Document Verification</h2>
+                                <form id="kyc-id-form">
+                                    <div class="form-group">
+                                        <label for="kyc-id-type">ID Document Type</label>
+                                        <select id="kyc-id-type" class="form-control" required>
+                                            <option value="">Select document type</option>
+                                            <option value="passport">Passport</option>
+                                            <option value="national-id">National ID</option>
+                                            <option value="drivers-license">Driver's License</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="kyc-id-number">ID Number</label>
+                                        <input type="text" id="kyc-id-number" class="form-control" placeholder="ID document number" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>ID Front Photo</label>
+                                        <div class="file-upload" onclick="document.getElementById('id-front-input').click()">
+                                            <i class="fas fa-camera"></i>
+                                            <p>Click to upload front of ID</p>
+                                            <small>JPG, PNG, PDF up to 5MB</small>
+                                            <input type="file" id="id-front-input" accept="image/*,.pdf" style="display: none;">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>ID Back Photo</label>
+                                        <div class="file-upload" onclick="document.getElementById('id-back-input').click()">
+                                            <i class="fas fa-camera"></i>
+                                            <p>Click to upload back of ID</p>
+                                            <small>JPG, PNG, PDF up to 5MB</small>
+                                            <input type="file" id="id-back-input" accept="image/*,.pdf" style="display: none;">
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; gap: 0.8rem;">
+                                        <button type="button" class="btn" style="flex: 1;" onclick="prevKycStep(1)">
+                                            Back
+                                        </button>
+                                        <button type="button" class="btn btn-primary" style="flex: 1;" onclick="nextKycStep(3)">
+                                            Continue to Step 3
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Step 3: Address Proof -->
+                            <div class="kyc-form-container" id="kyc-step3" style="display: none;">
+                                <h2 style="margin-bottom: 1.5rem; color: var(--dark);">Proof of Address</h2>
+                                <form id="kyc-address-form">
+                                    <div class="form-group">
+                                        <label for="kyc-proof-type">Proof of Address Document</label>
+                                        <select id="kyc-proof-type" class="form-control" required>
+                                            <option value="">Select document type</option>
+                                            <option value="utility-bill">Utility Bill</option>
+                                            <option value="bank-statement">Bank Statement</option>
+                                            <option value="tax-bill">Tax Bill</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Document Upload</label>
+                                        <div class="file-upload" onclick="document.getElementById('address-proof-input').click()">
+                                            <i class="fas fa-file-upload"></i>
+                                            <p>Click to upload proof of address</p>
+                                            <small>JPG, PNG, PDF up to 5MB</small>
+                                            <input type="file" id="address-proof-input" accept="image/*,.pdf" style="display: none;">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="kyc-proof-notes">Additional Notes (Optional)</label>
+                                        <textarea id="kyc-proof-notes" class="form-control" rows="3" placeholder="Any additional information"></textarea>
+                                    </div>
+                                    <div style="display: flex; gap: 0.8rem;">
+                                        <button type="button" class="btn" style="flex: 1;" onclick="prevKycStep(2)">
+                                            Back
+                                        </button>
+                                        <button type="button" class="btn btn-primary" style="flex: 1;" onclick="nextKycStep(4)">
+                                            Review & Submit
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Step 4: Review -->
+                            <div class="kyc-form-container" id="kyc-step4" style="display: none;">
+                                <h2 style="margin-bottom: 1.5rem; color: var(--dark);">Review & Submit</h2>
+                                <div style="background: var(--light); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
+                                    <h3 style="color: var(--dark); margin-bottom: 1.2rem;">Please review your information</h3>
+                                    <div id="kyc-review-content">
+                                        <!-- Review content will be populated here -->
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 0.8rem;">
+                                    <button type="button" class="btn" style="flex: 1;" onclick="prevKycStep(3)">
+                                        Back
+                                    </button>
+                                    <button type="button" class="btn btn-success" style="flex: 1;" onclick="submitKyc()">
+                                        <i class="fas fa-check-circle"></i>
+                                        Submit for Verification
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Referral Section -->
+                <section id="referral" class="section">
+                    <div class="welcome-message">
+                        <h1>Referral Program</h1>
+                        <p>Earn rewards by inviting friends to join MACSUN ENERGIES</p>
+                    </div>
+                    <div class="kyc-form-container">
+                        <h2 style="margin-bottom: 1.5rem; color: var(--dark);">Your Referral Link</h2>
+                        <div class="form-group">
+                            <div style="display: flex; gap: 8px; margin-bottom: 1.2rem;">
+                                <input type="text" id="referral-link" class="form-control" value="https://macsun-energies.site/ref/USER123" readonly>
+                                <button type="button" class="btn btn-primary" onclick="copyReferralLink()" style="width: auto; padding: 0 15px;">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <p style="color: var(--dark); font-weight: 600; margin-bottom: 0.5rem;">How it works:</p>
+                            <ul style="color: var(--gray); margin-left: 1.2rem; font-size: 0.9rem;">
+                                <li>Share your referral link with friends</li>
+                                <li>Earn 10% commission on their first investment</li>
+                                <li>Earn 5% commission on their subsequent investments</li>
+                                <li>Commission paid to your bonus account</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Download Section -->
+                <section id="download" class="section">
+                    <div class="welcome-message">
+                        <h1>Download Our App</h1>
+                        <p>Get the best experience on your mobile device or desktop</p>
+                    </div>
+
+                    <div class="download-grid">
+                        <div class="download-card" onclick="downloadApp('android')">
+                            <div class="download-icon">
+                                <i class="fab fa-android"></i>
+                            </div>
+                            <h3>Android App</h3>
+                            <p>Download for Android smartphones and tablets</p>
+                            <button class="btn btn-primary" style="margin-top: 1rem;">
+                                <i class="fas fa-download"></i> Download APK
+                            </button>
+                        </div>
+
+                        <div class="download-card" onclick="downloadApp('iphone')">
+                            <div class="download-icon">
+                                <i class="fab fa-apple"></i>
+                            </div>
+                            <h3>iPhone App</h3>
+                            <p>Download for iOS devices (iPhone & iPad)</p>
+                            <button class="btn btn-primary" style="margin-top: 1rem;">
+                                <i class="fas fa-download"></i> App Store
+                            </button>
+                        </div>
+
+                        <div class="download-card" onclick="downloadApp('desktop')">
+                            <div class="download-icon">
+                                <i class="fas fa-desktop"></i>
+                            </div>
+                            <h3>Desktop App</h3>
+                            <p>Download for Windows, Mac, and Linux</p>
+                            <button class="btn btn-primary" style="margin-top: 1rem;">
+                                <i class="fas fa-download"></i> Download
+                            </button>
+                        </div>
+
+                        <div class="download-card" onclick="downloadApp('web')">
+                            <div class="download-icon">
+                                <i class="fas fa-globe"></i>
+                            </div>
+                            <h3>Web Version</h3>
+                            <p>Access directly from your browser</p>
+                            <button class="btn btn-primary" style="margin-top: 1rem;">
+                                <i class="fas fa-external-link-alt"></i> Open Web App
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="kyc-form-container" style="margin-top: 2rem;">
+                        <h3 style="margin-bottom: 1rem;">App Features</h3>
+                        <ul style="color: var(--gray); margin-left: 1.2rem;">
+                            <li>Real-time investment tracking</li>
+                            <li>Push notifications for earnings</li>
+                            <li>Quick deposit and withdrawal</li>
+                            <li>Secure biometric login</li>
+                            <li>Offline access to your portfolio</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- About Us Section -->
+                <section id="about" class="section">
+                    <div class="welcome-message">
+                        <h1>About Macsun Energies</h1>
+                        <p>Leading the solar energy revolution in Africa</p>
+                    </div>
+                    
+                    <div class="about-content">
+                        <div class="about-header">
+                            <h2>Macsun Solar Energy Technology Co., Ltd.</h2>
+                        </div>
+                        
+                        <div class="about-description">
+                            <p>Macsun Solar Energy Technology Co., Ltd. is a premier Chinese manufacturer and global supplier of photovoltaic (PV) solar products, including advanced solar cells, high-efficiency panels, and integrated solar power systems for various applications like street lights, chargers, and power plants.</p>
+                            
+                            <p>As a subsidiary of the Ruixin Group, we focus on both OEM/ODM services and providing a wide range of renewable energy solutions. Our company specializes in advanced technologies like N-type Topcon cells and aims to deliver affordable clean energy globally.</p>
+                            
+                            <p>We are proud to operate as a Ghanaian-based Chinese company where users can generate solar energy with their mobile phones and also earn daily income. Our innovative platform allows users to participate in the solar energy revolution while earning sustainable returns on their investments.</p>
+                            
+                            <p>With operations across Africa, we're committed to bringing clean, affordable energy to communities while creating economic opportunities through our unique investment model that combines technology, sustainability, and financial empowerment.</p>
+                        </div>
+                        
+                        <div class="blog-grid">
+                            <div class="blog-card">
+                                <div class="blog-image">
+                                    <img src="https://images.unsplash.com/photo-1581094794329-c8112a89af12?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8Y2hpbmVzZSUyMGVuZ2luZWVyJTIwc29sYXJ8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=60" alt="Chinese Engineers">
+                                </div>
+                                <div class="blog-content">
+                                    <h3 class="blog-title">Our Technical Expertise</h3>
+                                    <p class="blog-text">Our team of Chinese engineers brings world-class solar technology to Africa, ensuring the highest efficiency and durability for all our solar products.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="blog-card">
+                                <div class="blog-image">
+                                    <img src="https://images.unsplash.com/photo-1551650975-87deedd944c3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8c29sYXIlMjBpbnN0YWxsYXRpb24lMjBnaGFuYXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60" alt="Solar Installation in Ghana">
+                                </div>
+                                <div class="blog-content">
+                                    <h3 class="blog-title">Ghana Operations</h3>
+                                    <p class="blog-text">Our team works closely with local communities in Ghana to install and maintain solar systems, creating jobs and sustainable energy solutions.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="blog-card">
+                                <div class="blog-image">
+                                    <img src="https://images.unsplash.com/photo-1533750349088-cd871a92f312?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8bW9iaWxlJTIwcGhvbmUlMjBzb2xhciUyMGFwcHxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60" alt="Mobile App">
+                                </div>
+                                <div class="blog-content">
+                                    <h3 class="blog-title">Mobile Energy Generation</h3>
+                                    <p class="blog-text">Our innovative mobile app allows users to monitor their solar investments, generate clean energy credits, and earn daily income from anywhere.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="blog-card">
+                                <div class="blog-image">
+                                    <img src="https://images.unsplash.com/photo-1586773860418-dc22f8b874bc?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fHNvbGFyJTIwZmFybSUyMGNoaW5lc2UlMjB3b3JrZXJzfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60" alt="Chinese and African Collaboration">
+                                </div>
+                                <div class="blog-content">
+                                    <h3 class="blog-title">Cross-Cultural Collaboration</h3>
+                                    <p class="blog-text">Chinese technical expertise combined with African market knowledge creates the perfect synergy for sustainable solar energy development.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Chat Admin Section -->
+                <section id="chat-admin" class="section">
+                    <div class="welcome-message">
+                        <h1>Chat with Admin</h1>
+                        <p>Get instant help from our support team via WhatsApp</p>
+                    </div>
+                    <div class="kyc-form-container">
+                        <h2 style="margin-bottom: 1.5rem; color: var(--dark);">Contact Admin Directly on WhatsApp</h2>
+                        
+                        <div style="background: linear-gradient(135deg, #25D366, #128C7E); color: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; text-align: center;">
+                            <div style="font-size: 2rem; margin-bottom: 1rem;">
+                                <i class="fab fa-whatsapp"></i>
+                            </div>
+                            <h3 style="margin-bottom: 0.5rem;">Chat on WhatsApp</h3>
+                            <div style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem;">027 331 5392</div>
+                            <p style="opacity: 0.9; font-size: 0.9rem;">Click the button below to open WhatsApp and start chatting</p>
+                        </div>
+                        
+                        <button class="btn btn-success btn-block" onclick="openWhatsApp()" style="background: linear-gradient(135deg, #25D366, #128C7E);">
+                            <i class="fab fa-whatsapp"></i>
+                            Open WhatsApp to Chat with Admin
+                        </button>
+                        
+                        <div style="margin-top: 2rem; padding: 1rem; background: var(--light); border-radius: 10px;">
+                            <h4 style="margin-bottom: 0.5rem; color: var(--dark);">Alternative Contact Methods</h4>
+                            <ul style="color: var(--gray); margin-left: 1.2rem;">
+                                <li><strong>Email:</strong> support@macsun-energies.site</li>
+                                <li><strong>Telegram:</strong> @macsun_support</li>
+                                <li><strong>Working Hours:</strong> Monday to Saturday, 9AM to 6PM</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="settings" class="section">
+                    <div class="welcome-message">
+                        <h1>Account Settings</h1>
+                        <p>Manage your account preferences and security</p>
+                    </div>
+                    <div class="kyc-form-container">
+                        <h2 style="margin-bottom: 1.5rem; color: var(--dark);">Update Profile</h2>
+                        <form id="settings-form">
+                            <div class="form-group">
+                                <label for="settings-name">Full Name</label>
+                                <input type="text" id="settings-name" class="form-control" value="">
+                            </div>
+                            <div class="form-group">
+                                <label for="settings-phone">Phone Number</label>
+                                <input type="tel" id="settings-phone" class="form-control" value="">
+                            </div>
+                            <div class="form-group">
+                                <label for="settings-email">Email Address</label>
+                                <input type="email" id="settings-email" class="form-control" value="" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="settings-password">New Password</label>
+                                <input type="password" id="settings-password" class="form-control" placeholder="Leave blank to keep current">
+                            </div>
+                            <div class="form-group">
+                                <label for="settings-withdraw-password">Withdrawal Password</label>
+                                <input type="password" id="settings-withdraw-password" class="form-control" placeholder="Change 4-digit withdrawal password">
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <i class="fas fa-save"></i>
+                                Save Changes
+                            </button>
+                        </form>
+                    </div>
+                </section>
+
+                <section id="signout" class="section">
+                    <div class="welcome-message">
+                        <h1>Sign Out</h1>
+                        <p>We hope to see you again soon!</p>
+                    </div>
+                    <div class="kyc-form-container">
+                        <h2 style="margin-bottom: 1.5rem; color: var(--dark);">Confirm Sign Out</h2>
+                        <p style="margin-bottom: 1.5rem; color: var(--gray);">Your investments will continue to earn while you're away.</p>
+                        <button type="button" class="btn btn-primary btn-block" onclick="signOutUser()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            Sign Out
+                        </button>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let userData = null;
+        let currentKycStep = 1;
+        const USD_TO_CNY_RATE = 10;
+        const CNY_TO_GHS_RATE = 2;
+        const USD_TO_GHS_RATE = 20;
+        let pendingWithdrawalData = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                initFirebaseAuth();
+                initApp();
+            }, 500);
+        });
+
+        function initApp() {
+            // Menu toggle
+            const menuToggle = document.getElementById('menu-toggle');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            
+            let sidebarOpen = false;
+            let profileDropdownOpen = false;
+
+            function toggleSidebar() {
+                sidebarOpen = !sidebarOpen;
+                sidebar.classList.toggle('active', sidebarOpen);
+                overlay.classList.toggle('active', sidebarOpen);
+                menuToggle.classList.toggle('active', sidebarOpen);
+            }
+
+            menuToggle.addEventListener('click', toggleSidebar);
+            overlay.addEventListener('click', toggleSidebar);
+
+            // Theme toggle
+            const themeToggle = document.getElementById('theme-toggle');
+            themeToggle.addEventListener('click', function() {
+                document.body.classList.toggle('dark-mode');
+                themeToggle.innerHTML = document.body.classList.contains('dark-mode') ? 
+                    '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+            });
+
+            // User profile dropdown
+            const userInfoToggle = document.getElementById('user-info-toggle');
+            const userProfileDropdown = document.getElementById('user-profile-dropdown');
+            
+            userInfoToggle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                profileDropdownOpen = !profileDropdownOpen;
+                userProfileDropdown.classList.toggle('active', profileDropdownOpen);
+            });
+
+            document.addEventListener('click', function(e) {
+                if (profileDropdownOpen && !userInfoToggle.contains(e.target) && !userProfileDropdown.contains(e.target)) {
+                    userProfileDropdown.classList.remove('active');
+                    profileDropdownOpen = false;
+                }
+            });
+
+            // Menu navigation
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    menuItems.forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const targetId = this.getAttribute('data-target');
+                    switchSection(targetId);
+                    
+                    if (window.innerWidth <= 768) {
+                        toggleSidebar();
+                    }
+                    
+                    if (profileDropdownOpen) {
+                        userProfileDropdown.classList.remove('active');
+                        profileDropdownOpen = false;
+                    }
+                });
+            });
+
+            // Forms
+            const forms = ['momo-deposit-form', 'crypto-deposit-form', 'settings-form', 'withdraw-password-form'];
+            forms.forEach(formId => {
+                const form = document.getElementById(formId);
+                if (form) {
+                    form.addEventListener('submit', async function(e) {
+                        e.preventDefault();
+                        await handleFormSubmit(formId);
+                    });
+                }
+            });
+
+            // KYC buttons
+            document.getElementById('kyc-verification-btn')?.addEventListener('click', () => switchSection('kyc'));
+            document.getElementById('verify-email-btn')?.addEventListener('click', verifyEmail);
+            document.getElementById('download-app-btn')?.addEventListener('click', () => switchSection('download'));
+            document.getElementById('profile-signout')?.addEventListener('click', signOutUser);
+
+            // Modal close
+            document.getElementById('close-withdraw-modal')?.addEventListener('click', function() {
+                document.getElementById('withdraw-password-modal').style.display = 'none';
+            });
+
+            // Close modal when clicking outside
+            window.addEventListener('click', function(e) {
+                const modal = document.getElementById('withdraw-password-modal');
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+
+            // Initialize platform status
+            updatePlatformStatus();
+            setInterval(updatePlatformStatus, 60000);
+        }
+
+        function switchSection(sectionId) {
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(section => section.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Load section-specific data
+            switch(sectionId) {
+                case 'dashboard':
+                    loadDashboardData();
+                    break;
+                case 'transactions':
+                    loadTransactions();
+                    break;
+                case 'my-investments':
+                    loadMyInvestments();
+                    break;
+                case 'withdraw':
+                    updateWithdrawBalances();
+                    break;
+            }
+        }
+
+        // Currency conversion functions
+        function convertCurrency(from) {
+            let usd = parseFloat(document.getElementById('usd-amount').value) || 0;
+            let cny = parseFloat(document.getElementById('cny-amount').value) || 0;
+            let ghs = parseFloat(document.getElementById('ghs-amount').value) || 0;
+            
+            if (from === 'usd' && usd > 0) {
+                cny = usd * USD_TO_CNY_RATE;
+                ghs = usd * USD_TO_GHS_RATE;
+            } else if (from === 'cny' && cny > 0) {
+                usd = cny / USD_TO_CNY_RATE;
+                ghs = cny * CNY_TO_GHS_RATE;
+            } else if (from === 'ghs' && ghs > 0) {
+                usd = ghs / USD_TO_GHS_RATE;
+                cny = ghs / CNY_TO_GHS_RATE;
+            }
+            
+            document.getElementById('usd-amount').value = usd.toFixed(2);
+            document.getElementById('cny-amount').value = cny.toFixed(2);
+            document.getElementById('ghs-amount').value = ghs.toFixed(2);
+            
+            // Update mobile money displays
+            document.getElementById('mtn-amount-display').textContent = '¥' + cny.toFixed(2);
+            document.getElementById('telecel-amount-display').textContent = '¥' + cny.toFixed(2);
+        }
+
+        function convertWithdrawCurrency(from) {
+            let usd = parseFloat(document.getElementById('withdraw-usd').value) || 0;
+            let cny = parseFloat(document.getElementById('withdraw-cny').value) || 0;
+            let ghs = parseFloat(document.getElementById('withdraw-ghs').value) || 0;
+            
+            if (from === 'usd' && usd > 0) {
+                cny = usd * USD_TO_CNY_RATE;
+                ghs = usd * USD_TO_GHS_RATE;
+            } else if (from === 'cny' && cny > 0) {
+                usd = cny / USD_TO_CNY_RATE;
+                ghs = cny * CNY_TO_GHS_RATE;
+            } else if (from === 'ghs' && ghs > 0) {
+                usd = ghs / USD_TO_GHS_RATE;
+                cny = ghs / CNY_TO_GHS_RATE;
+            }
+            
+            document.getElementById('withdraw-usd').value = usd.toFixed(2);
+            document.getElementById('withdraw-cny').value = cny.toFixed(2);
+            document.getElementById('withdraw-ghs').value = ghs.toFixed(2);
+        }
+
+        function selectPaymentMethod(method) {
+            document.getElementById('momo-instructions').style.display = 'none';
+            document.getElementById('crypto-instructions').style.display = 'none';
+            document.getElementById('select-momo').classList.remove('btn-primary');
+            document.getElementById('select-crypto').classList.remove('btn-primary');
+            
+            if (method === 'momo') {
+                document.getElementById('momo-instructions').style.display = 'block';
+                document.getElementById('select-momo').classList.add('btn-primary');
+            } else if (method === 'crypto') {
+                document.getElementById('crypto-instructions').style.display = 'block';
+                document.getElementById('select-crypto').classList.add('btn-primary');
+            }
+        }
+
+        function updateMomoDetails() {
+            const network = document.getElementById('momo-network').value;
+            document.getElementById('mtn-details').style.display = 'none';
+            document.getElementById('telecel-details').style.display = 'none';
+            
+            if (network === 'mtn') {
+                document.getElementById('mtn-details').style.display = 'block';
+            } else if (network === 'telecel') {
+                document.getElementById('telecel-details').style.display = 'block';
+            }
+        }
+
+        function updateCryptoDetails() {
+            const network = document.getElementById('crypto-network').value;
+            document.getElementById('erc20-details').style.display = 'none';
+            document.getElementById('bnb-details').style.display = 'none';
+            
+            if (network === 'erc20') {
+                document.getElementById('erc20-details').style.display = 'block';
+            } else if (network === 'bnb') {
+                document.getElementById('bnb-details').style.display = 'block';
+            }
+        }
+
+        async function initFirebaseAuth() {
+            if (!window.auth) {
+                setTimeout(initFirebaseAuth, 100);
+                return;
+            }
+
+            // Set up auth state listener
+            window.onAuthStateChanged(window.auth, async (user) => {
+                const loginPage = document.getElementById('login-page');
+                const dashboardPage = document.getElementById('dashboard-page');
+                
+                if (user) {
+                    // User is signed in - allow login without email verification
+                    currentUser = user;
+                    loginPage.style.display = 'none';
+                    dashboardPage.style.display = 'flex';
+                    
+                    // Load or create user data
+                    await loadUserData();
+                    updateUIWithUserData();
+                    
+                    // Update email verification status
+                    updateEmailVerificationStatus();
+                    
+                } else {
+                    // User is signed out
+                    currentUser = null;
+                    userData = null;
+                    loginPage.style.display = 'flex';
+                    dashboardPage.style.display = 'none';
+                    
+                    // Show login form by default
+                    document.getElementById('signup-card').style.display = 'none';
+                    document.getElementById('login-card').style.display = 'block';
+                    clearAuthMessages();
+                }
+            });
+
+            // Set up login form
+            const loginForm = document.getElementById('login-form');
+            if (loginForm) {
+                loginForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    await handleLogin();
+                });
+            }
+
+            // Set up signup form
+            const signupForm = document.getElementById('signup-form');
+            if (signupForm) {
+                signupForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    await handleSignup();
+                });
+            }
+
+            // Forgot Password
+            document.getElementById('forgot-password')?.addEventListener('click', async function(e) {
+                e.preventDefault();
+                const email = document.getElementById('login-email').value;
+                if (!email) {
+                    showAuthMessage('Please enter your email address first.', 'warning');
+                    return;
+                }
+                await resetPassword(email);
+            });
+
+            // Toggle between login/signup
+            document.getElementById('show-signup')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.getElementById('login-card').style.display = 'none';
+                document.getElementById('signup-card').style.display = 'block';
+                clearAuthMessages();
+            });
+
+            document.getElementById('show-login')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.getElementById('signup-card').style.display = 'none';
+                document.getElementById('login-card').style.display = 'block';
+                clearAuthMessages();
+            });
+        }
+
+        async function handleLogin() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const loginBtn = document.getElementById('login-btn');
+
+            // Show loading
+            const originalText = loginBtn.innerHTML;
+            loginBtn.innerHTML = '<span class="loading-spinner"></span> Signing in...';
+            loginBtn.disabled = true;
+
+            try {
+                // Remove email verification check - allow login without verification
+                await window.signInWithEmailAndPassword(window.auth, email, password);
+                showAuthMessage('Successfully signed in!', 'success');
+            } catch (error) {
+                let errorMessage = 'An error occurred during sign in.';
+                switch (error.code) {
+                    case 'auth/user-not-found':
+                    case 'auth/wrong-password':
+                        errorMessage = 'Invalid email or password.';
+                        break;
+                    case 'auth/too-many-requests':
+                        errorMessage = 'Too many failed attempts. Please try again later.';
+                        break;
+                    default:
+                        errorMessage = error.message;
+                }
+                showAuthMessage(errorMessage, 'error');
+            } finally {
+                loginBtn.innerHTML = originalText;
+                loginBtn.disabled = false;
+            }
+        }
+
+        async function handleSignup() {
+            const name = document.getElementById('signup-name').value;
+            const email = document.getElementById('signup-email').value;
+            const phone = document.getElementById('signup-phone').value;
+            const password = document.getElementById('signup-password').value;
+            const confirmPassword = document.getElementById('signup-confirm-password').value;
+            const withdrawPassword = document.getElementById('signup-withdraw-password').value;
+            const country = document.getElementById('signup-country').value;
+            const signupBtn = document.getElementById('signup-btn');
+
+            // Validation
+            if (password !== confirmPassword) {
+                showAuthMessage('Passwords do not match.', 'error', 'signup');
+                return;
+            }
+            if (password.length < 8) {
+                showAuthMessage('Password must be at least 8 characters.', 'error', 'signup');
+                return;
+            }
+            if (withdrawPassword.length < 4) {
+                showAuthMessage('Withdrawal password must be at least 4 digits.', 'error', 'signup');
+                return;
+            }
+
+            // Show loading
+            const originalText = signupBtn.innerHTML;
+            signupBtn.innerHTML = '<span class="loading-spinner"></span> Creating account...';
+            signupBtn.disabled = true;
+
+            try {
+                // Create user with email/password
+                const userCredential = await window.createUserWithEmailAndPassword(window.auth, email, password);
+                
+                // Generate unique UID for user (using Firebase UID as base)
+                const uid = userCredential.user.uid;
+                const userUid = 'MACSUN-' + uid.substring(0, 8).toUpperCase();
+                
+                // Create user document in Firestore
+                await createUserDocument(uid, {
+                    uid: userUid,
+                    name: name,
+                    email: email,
+                    phone: phone,
+                    country: country,
+                    createdAt: new Date().toISOString(),
+                    currentAccount: 0,
+                    bonusAccount: 0,
+                    kycStatus: 'not_verified',
+                    referralCode: generateReferralCode(),
+                    level: 'basic',
+                    withdrawPassword: withdrawPassword,
+                    emailVerified: false,
+                    totalInvested: 0,
+                    totalEarned: 0
+                });
+
+                // Try to send verification email (but don't require it for login)
+                try {
+                    await window.sendEmailVerification(userCredential.user);
+                    showAuthMessage('Account created! Verification email sent. You can now login.', 'success', 'signup');
+                } catch (emailError) {
+                    // If email verification fails, still allow account creation
+                    console.warn('Email verification could not be sent:', emailError);
+                    showAuthMessage('Account created! You can now login.', 'success', 'signup');
+                }
+                
+                // Auto-switch to login after 3 seconds
+                setTimeout(() => {
+                    document.getElementById('signup-card').style.display = 'none';
+                    document.getElementById('login-card').style.display = 'block';
+                    clearAuthMessages();
+                    document.getElementById('login-email').value = email;
+                }, 3000);
+                
+            } catch (error) {
+                let errorMessage = 'An error occurred during sign up.';
+                switch (error.code) {
+                    case 'auth/email-already-in-use':
+                        errorMessage = 'An account already exists with this email.';
+                        break;
+                    case 'auth/invalid-email':
+                        errorMessage = 'Invalid email address.';
+                        break;
+                    default:
+                        errorMessage = error.message;
+                }
+                showAuthMessage(errorMessage, 'error', 'signup');
+            } finally {
+                signupBtn.innerHTML = originalText;
+                signupBtn.disabled = false;
+            }
+        }
+
+        async function createUserDocument(uid, userData) {
+            try {
+                await window.firestore.setDoc(window.firestore.doc(window.db, 'users', uid), userData);
+                
+                // Create initial transaction record
+                await window.firestore.addDoc(window.firestore.collection(window.db, 'transactions'), {
+                    userId: uid,
+                    type: 'account_creation',
+                    amount: 0,
+                    currency: 'CNY',
+                    status: 'completed',
+                    description: 'Account created',
+                    timestamp: new Date().toISOString(),
+                    reference: 'ACC-' + Date.now()
+                });
+                
+                return true;
+            } catch (error) {
+                console.error('Error creating user document:', error);
+                return false;
+            }
+        }
+
+        async function loadUserData() {
+            if (!currentUser) return;
+            
+            try {
+                const userDoc = await window.firestore.getDoc(window.firestore.doc(window.db, 'users', currentUser.uid));
+                if (userDoc.exists()) {
+                    userData = userDoc.data();
+                    return userData;
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
+            return null;
+        }
+
+        function updateUIWithUserData() {
+            if (!currentUser || !userData) return;
+            
+            // Update header
+            document.getElementById('user-avatar').textContent = userData.name.charAt(0).toUpperCase();
+            document.getElementById('user-display-name').textContent = userData.name;
+            document.getElementById('user-level').textContent = userData.level || 'Basic';
+            
+            // Update profile dropdown
+            document.getElementById('profile-avatar').textContent = userData.name.charAt(0).toUpperCase();
+            document.getElementById('profile-name').textContent = userData.name;
+            document.getElementById('profile-email').textContent = userData.email;
+            document.getElementById('uid-text').textContent = userData.uid || 'Loading...';
+            document.getElementById('member-since').textContent = new Date(userData.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+            
+            // Update KYC status
+            const kycBadge = document.getElementById('kyc-status-badge');
+            if (userData.kycStatus === 'verified') {
+                kycBadge.innerHTML = '<i class="fas fa-check-circle"></i><span>KYC: Verified</span>';
+                kycBadge.style.background = 'rgba(6, 214, 160, 0.2)';
+                kycBadge.style.color = 'var(--success)';
+            } else if (userData.kycStatus === 'pending') {
+                kycBadge.innerHTML = '<i class="fas fa-clock"></i><span>KYC: Pending</span>';
+                kycBadge.style.background = 'rgba(255, 209, 102, 0.2)';
+                kycBadge.style.color = 'var(--warning)';
+            } else {
+                kycBadge.innerHTML = '<i class="fas fa-exclamation-circle"></i><span>KYC: Not Verified</span>';
+                kycBadge.style.background = 'rgba(239, 71, 111, 0.2)';
+                kycBadge.style.color = 'var(--danger)';
+            }
+            
+            // Update dashboard with both accounts
+            document.getElementById('dashboard-welcome').textContent = `Welcome back, ${userData.name}!`;
+            document.getElementById('total-balance').textContent = `¥${userData.currentAccount?.toFixed(2) || '0.00'}`;
+            document.getElementById('bonus-balance').textContent = `¥${userData.bonusAccount?.toFixed(2) || '0.00'}`;
+            document.getElementById('current-account-balance').textContent = `¥${userData.currentAccount?.toFixed(2) || '0.00'}`;
+            document.getElementById('bonus-account-balance').textContent = `¥${userData.bonusAccount?.toFixed(2) || '0.00'}`;
+            
+            // Update settings form
+            document.getElementById('settings-name').value = userData.name;
+            document.getElementById('settings-phone').value = userData.phone || '';
+            document.getElementById('settings-email').value = userData.email;
+            
+            // Update referral link with .site domain
+            document.getElementById('referral-link').value = `https://macsun-energies.site/ref/${userData.referralCode}`;
+            
+            // Load additional data
+            loadDashboardData();
+        }
+
+        async function loadDashboardData() {
+            if (!currentUser) return;
+            
+            try {
+                // Load transactions
+                const transactionsQuery = window.firestore.query(
+                    window.firestore.collection(window.db, 'transactions'),
+                    window.firestore.where('userId', '==', currentUser.uid),
+                    window.firestore.where('timestamp', '>=', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+                );
+                
+                const transactionsSnapshot = await window.firestore.getDocs(transactionsQuery);
+                const recentTransactions = [];
+                
+                transactionsSnapshot.forEach(doc => {
+                    recentTransactions.push(doc.data());
+                });
+                
+                // Sort by date (newest first)
+                recentTransactions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                
+                // Update transactions table
+                const tbody = document.getElementById('recent-transactions');
+                tbody.innerHTML = '';
+                
+                if (recentTransactions.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 3rem; color: var(--gray);">
+                                <i class="fas fa-exchange-alt" style="font-size: 2rem; margin-bottom: 1rem; display: block; opacity: 0.5;"></i>
+                                No transactions yet
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    recentTransactions.slice(0, 5).forEach(transaction => {
+                        const amountDisplay = `¥${transaction.amount.toFixed(2)}`;
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${new Date(transaction.timestamp).toLocaleDateString()}</td>
+                            <td>${transaction.type}</td>
+                            <td>${amountDisplay}</td>
+                            <td><span class="status-badge status-${transaction.status}">${transaction.status}</span></td>
+                            <td>${transaction.description}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
+                
+                // Load active investments count
+                const investmentsQuery = window.firestore.query(
+                    window.firestore.collection(window.db, 'investments'),
+                    window.firestore.where('userId', '==', currentUser.uid),
+                    window.firestore.where('status', '==', 'active')
+                );
+                
+                const investmentsSnapshot = await window.firestore.getDocs(investmentsQuery);
+                document.getElementById('active-investments').textContent = investmentsSnapshot.size;
+                document.getElementById('active-plans-count').textContent = investmentsSnapshot.size;
+                
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+            }
+        }
+
+        async function loadTransactions() {
+            if (!currentUser) return;
+            
+            try {
+                const transactionsQuery = window.firestore.query(
+                    window.firestore.collection(window.db, 'transactions'),
+                    window.firestore.where('userId', '==', currentUser.uid)
+                );
+                
+                const transactionsSnapshot = await window.firestore.getDocs(transactionsQuery);
+                const transactions = [];
+                
+                transactionsSnapshot.forEach(doc => {
+                    transactions.push(doc.data());
+                });
+                
+                // Sort by date (newest first)
+                transactions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                
+                // Update transactions table
+                const tbody = document.getElementById('all-transactions');
+                tbody.innerHTML = '';
+                
+                if (transactions.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 3rem; color: var(--gray);">
+                                <i class="fas fa-exchange-alt" style="font-size: 2rem; margin-bottom: 1rem; display: block; opacity: 0.5;"></i>
+                                No transaction history available
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    transactions.forEach(transaction => {
+                        const amountDisplay = `¥${transaction.amount.toFixed(2)}`;
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${new Date(transaction.timestamp).toLocaleString()}</td>
+                            <td>${transaction.type}</td>
+                            <td>${amountDisplay}</td>
+                            <td><span class="status-badge status-${transaction.status}">${transaction.status}</span></td>
+                            <td>${transaction.reference || 'N/A'}</td>
+                            <td>${transaction.description}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
+                
+            } catch (error) {
+                console.error('Error loading transactions:', error);
+            }
+        }
+
+        async function loadMyInvestments() {
+            if (!currentUser) return;
+            
+            try {
+                const investmentsQuery = window.firestore.query(
+                    window.firestore.collection(window.db, 'investments'),
+                    window.firestore.where('userId', '==', currentUser.uid),
+                    window.firestore.where('status', '==', 'active')
+                );
+                
+                const investmentsSnapshot = await window.firestore.getDocs(investmentsQuery);
+                const investments = [];
+                
+                investmentsSnapshot.forEach(doc => {
+                    investments.push({id: doc.id, ...doc.data()});
+                });
+                
+                // Update investments table
+                const tbody = document.getElementById('active-investments-list');
+                tbody.innerHTML = '';
+                
+                if (investments.length === 0) {
+                    document.getElementById('investment-visual').style.display = 'none';
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 3rem; color: var(--gray);">
+                                <i class="fas fa-chart-bar" style="font-size: 2rem; margin-bottom: 1rem; display: block; opacity: 0.5;"></i>
+                                No active investments
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    document.getElementById('investment-visual').style.display = 'block';
+                    
+                    // Update visual with first investment
+                    if (investments[0]) {
+                        const investment = investments[0];
+                        const dailyEarnings = (investment.amount * (investment.dailyReturn / 100)).toFixed(2);
+                        document.getElementById('visual-plan-name').textContent = investment.packageName;
+                        document.getElementById('visual-plan-details').textContent = `¥${investment.amount} • ${investment.dailyReturn}% daily`;
+                        document.getElementById('visual-plan-earnings').textContent = `¥${dailyEarnings}/day`;
+                    }
+                    
+                    investments.forEach(investment => {
+                        const daysPassed = Math.floor((new Date() - new Date(investment.startDate)) / (1000 * 60 * 60 * 24));
+                        const totalEarned = investment.amount * (investment.dailyReturn / 100) * Math.min(daysPassed, 60);
+                        const dailyEarnings = investment.amount * (investment.dailyReturn / 100);
+                        
+                        const row = document.createElement('tr');
+                        row.className = 'rotating-investment';
+                        row.innerHTML = `
+                            <td>${investment.packageName}</td>
+                            <td>¥${investment.amount.toFixed(2)}</td>
+                            <td>${new Date(investment.startDate).toLocaleDateString()}</td>
+                            <td>${new Date(investment.endDate).toLocaleDateString()}</td>
+                            <td>¥${dailyEarnings.toFixed(2)}</td>
+                            <td>¥${totalEarned.toFixed(2)}</td>
+                            <td><span class="status-badge status-completed">Active</span></td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                    
+                    // Update active investments count
+                    document.getElementById('active-investments').textContent = investments.length;
+                }
+                
+            } catch (error) {
+                console.error('Error loading investments:', error);
+            }
+        }
+
+        async function handleFormSubmit(formId) {
+            switch(formId) {
+                case 'momo-deposit-form':
+                    await handleMomoDeposit();
+                    break;
+                case 'crypto-deposit-form':
+                    await handleCryptoDeposit();
+                    break;
+                case 'settings-form':
+                    await handleSettingsUpdate();
+                    break;
+                case 'withdraw-password-form':
+                    await verifyWithdrawalPassword();
+                    break;
+            }
+        }
+
+        async function handleMomoDeposit() {
+            const network = document.getElementById('momo-network').value;
+            const transactionId = document.getElementById('transaction-id').value;
+            const amount = parseFloat(document.getElementById('momo-amount-confirm').value);
+            
+            if (!currentUser || !userData) return;
+            
+            if (!network) {
+                showToast('Please select a mobile money network', 'error');
+                return;
+            }
+            
+            if (amount < 100) {
+                showToast('Minimum deposit is ¥100 ($10)', 'error');
+                return;
+            }
+            
+            // Check KYC status
+            if (userData.kycStatus !== 'verified') {
+                showToast('Please complete KYC verification before depositing', 'error');
+                switchSection('kyc');
+                return;
+            }
+            
+            try {
+                // Create transaction record
+                await window.firestore.addDoc(window.firestore.collection(window.db, 'transactions'), {
+                    userId: currentUser.uid,
+                    type: 'deposit',
+                    amount: amount,
+                    currency: 'CNY',
+                    status: 'pending',
+                    method: `mobile_money_${network}`,
+                    description: `Deposit via ${network.toUpperCase()} Mobile Money`,
+                    timestamp: new Date().toISOString(),
+                    reference: transactionId,
+                    details: {
+                        network: network,
+                        transactionId: transactionId,
+                        amount: amount
+                    }
+                });
+                
+                showToast(`Deposit request submitted for ¥${amount}! Transaction ID: ${transactionId}. Awaiting admin approval.`, 'success');
+                
+                // Reset form
+                document.getElementById('momo-deposit-form').reset();
+                document.getElementById('momo-instructions').style.display = 'none';
+                document.getElementById('select-momo').classList.remove('btn-primary');
+                
+                // Refresh data
+                loadDashboardData();
+                
+            } catch (error) {
+                showToast('Error submitting deposit: ' + error.message, 'error');
+            }
+        }
+
+        async function handleCryptoDeposit() {
+            const network = document.getElementById('crypto-network').value;
+            const txHash = document.getElementById('tx-hash').value;
+            const amount = parseFloat(document.getElementById('crypto-amount').value);
+            
+            if (!currentUser || !userData) return;
+            
+            if (!network) {
+                showToast('Please select a blockchain network', 'error');
+                return;
+            }
+            
+            if (amount <= 0) {
+                showToast('Please enter valid amount', 'error');
+                return;
+            }
+            
+            // Check KYC status
+            if (userData.kycStatus !== 'verified') {
+                showToast('Please complete KYC verification before depositing', 'error');
+                switchSection('kyc');
+                return;
+            }
+            
+            try {
+                // Create transaction record
+                await window.firestore.addDoc(window.firestore.collection(window.db, 'transactions'), {
+                    userId: currentUser.uid,
+                    type: 'deposit',
+                    amount: amount,
+                    currency: 'CRYPTO',
+                    status: 'pending',
+                    method: `crypto_${network}`,
+                    description: `Crypto deposit via ${network.toUpperCase()}`,
+                    timestamp: new Date().toISOString(),
+                    reference: txHash,
+                    details: {
+                        network: network,
+                        txHash: txHash,
+                        amount: amount
+                    }
+                });
+                
+                showToast(`Crypto deposit submitted! Transaction Hash: ${txHash.substring(0, 20)}... Awaiting confirmations.`, 'success');
+                
+                // Reset form
+                document.getElementById('crypto-deposit-form').reset();
+                document.getElementById('crypto-instructions').style.display = 'none';
+                document.getElementById('select-crypto').classList.remove('btn-primary');
+                
+                // Refresh data
+                loadDashboardData();
+                
+            } catch (error) {
+                showToast('Error submitting crypto deposit: ' + error.message, 'error');
+            }
+        }
+
+        function requestWithdrawal() {
+            const account = document.getElementById('withdraw-account').value;
+            const amountCny = parseFloat(document.getElementById('withdraw-cny').value) || 0;
+            const method = document.getElementById('withdraw-method').value;
+            const accountDetails = document.getElementById('account-details').value;
+            
+            if (!currentUser || !userData) return;
+            
+            if (!account || !amountCny || !method || !accountDetails) {
+                showToast('Please fill all required fields', 'error');
+                return;
+            }
+            
+            // Check KYC status
+            if (userData.kycStatus !== 'verified') {
+                showToast('Please complete KYC verification before withdrawing', 'error');
+                switchSection('kyc');
+                return;
+            }
+            
+            // Check minimum amounts
+            if (account === 'current' && amountCny < 100) {
+                showToast('Minimum withdrawal from current account is ¥100', 'error');
+                return;
+            }
+            
+            if (account === 'bonus' && amountCny < 100) {
+                showToast('Minimum withdrawal from bonus account is ¥100', 'error');
+                return;
+            }
+            
+            // Check balance
+            const balance = account === 'current' ? userData.currentAccount : userData.bonusAccount;
+            if (amountCny > balance) {
+                showToast('Insufficient balance', 'error');
+                return;
+            }
+            
+            // Store withdrawal data and show password modal
+            pendingWithdrawalData = {
+                account: account,
+                amountCny: amountCny,
+                method: method,
+                accountDetails: accountDetails,
+                amountUsd: (amountCny / USD_TO_CNY_RATE).toFixed(2),
+                amountGhs: (amountCny * CNY_TO_GHS_RATE).toFixed(2)
+            };
+            
+            document.getElementById('withdraw-password-modal').style.display = 'flex';
+            document.getElementById('withdraw-password-input').value = '';
+            document.getElementById('withdraw-password-input').focus();
+        }
+
+        async function verifyWithdrawalPassword() {
+            const password = document.getElementById('withdraw-password-input').value;
+            
+            if (!pendingWithdrawalData || !userData) {
+                showToast('Invalid withdrawal request', 'error');
+                return;
+            }
+            
+            if (password !== userData.withdrawPassword) {
+                showToast('Incorrect withdrawal password', 'error');
+                return;
+            }
+            
+            try {
+                // Update user balance
+                const updateData = {};
+                if (pendingWithdrawalData.account === 'current') {
+                    updateData.currentAccount = window.firestore.increment(-pendingWithdrawalData.amountCny);
+                } else {
+                    updateData.bonusAccount = window.firestore.increment(-pendingWithdrawalData.amountCny);
+                }
+                
+                await window.firestore.updateDoc(
+                    window.firestore.doc(window.db, 'users', currentUser.uid),
+                    updateData
+                );
+                
+                // Create transaction record
+                await window.firestore.addDoc(window.firestore.collection(window.db, 'transactions'), {
+                    userId: currentUser.uid,
+                    type: 'withdrawal',
+                    amount: pendingWithdrawalData.amountCny,
+                    currency: 'CNY',
+                    status: 'pending',
+                    method: pendingWithdrawalData.method,
+                    description: `Withdrawal from ${pendingWithdrawalData.account} account`,
+                    timestamp: new Date().toISOString(),
+                    reference: 'WTH-' + Date.now(),
+                    accountDetails: pendingWithdrawalData.accountDetails,
+                    details: {
+                        account: pendingWithdrawalData.account,
+                        amountUsd: pendingWithdrawalData.amountUsd,
+                        amountGhs: pendingWithdrawalData.amountGhs
+                    }
+                });
+                
+                showToast(`Withdrawal request submitted for ¥${pendingWithdrawalData.amountCny}! Processing time: 24-48 hours.`, 'success');
+                
+                // Close modal and reset form
+                document.getElementById('withdraw-password-modal').style.display = 'none';
+                document.getElementById('withdraw-form').reset();
+                pendingWithdrawalData = null;
+                
+                // Refresh user data
+                await loadUserData();
+                updateUIWithUserData();
+                loadDashboardData();
+                
+            } catch (error) {
+                showToast('Error processing withdrawal: ' + error.message, 'error');
+            }
+        }
+
+        async function handleSettingsUpdate() {
+            const name = document.getElementById('settings-name').value;
+            const phone = document.getElementById('settings-phone').value;
+            const password = document.getElementById('settings-password').value;
+            const withdrawPassword = document.getElementById('settings-withdraw-password').value;
+            
+            try {
+                const updateData = {
+                    name: name,
+                    phone: phone
+                };
+                
+                if (withdrawPassword && withdrawPassword.length >= 4) {
+                    updateData.withdrawPassword = withdrawPassword;
+                }
+                
+                // Update user document
+                await window.firestore.updateDoc(
+                    window.firestore.doc(window.db, 'users', currentUser.uid),
+                    updateData
+                );
+                
+                // Update userData
+                userData.name = name;
+                userData.phone = phone;
+                if (withdrawPassword) {
+                    userData.withdrawPassword = withdrawPassword;
+                }
+                
+                // Update UI
+                updateUIWithUserData();
+                
+                showToast('Profile updated successfully!', 'success');
+                
+            } catch (error) {
+                showToast('Error updating profile: ' + error.message, 'error');
+            }
+        }
+
+        // KYC Functions
+        function nextKycStep(step) {
+            // Validate current step
+            if (!validateKycStep(currentKycStep)) {
+                return;
+            }
+            
+            // Hide current step
+            document.getElementById(`kyc-step${currentKycStep}`).style.display = 'none';
+            document.getElementById(`step${currentKycStep}`).classList.remove('active');
+            
+            // Show next step
+            document.getElementById(`kyc-step${step}`).style.display = 'block';
+            document.getElementById(`step${step}`).classList.add('active');
+            
+            currentKycStep = step;
+            
+            if (step === 4) {
+                populateReviewContent();
+            }
+        }
+
+        function prevKycStep(step) {
+            // Hide current step
+            document.getElementById(`kyc-step${currentKycStep}`).style.display = 'none';
+            document.getElementById(`step${currentKycStep}`).classList.remove('active');
+            
+            // Show previous step
+            document.getElementById(`kyc-step${step}`).style.display = 'block';
+            document.getElementById(`step${step}`).classList.add('active');
+            
+            currentKycStep = step;
+        }
+
+        function validateKycStep(step) {
+            switch(step) {
+                case 1:
+                    const fullname = document.getElementById('kyc-fullname').value;
+                    const dob = document.getElementById('kyc-dob').value;
+                    const nationality = document.getElementById('kyc-nationality').value;
+                    const address = document.getElementById('kyc-address').value;
+                    
+                    if (!fullname || !dob || !nationality || !address) {
+                        showToast('Please fill all required fields', 'error');
+                        return false;
+                    }
+                    return true;
+                case 2:
+                    const idType = document.getElementById('kyc-id-type').value;
+                    const idNumber = document.getElementById('kyc-id-number').value;
+                    
+                    if (!idType || !idNumber) {
+                        showToast('Please fill all required fields', 'error');
+                        return false;
+                    }
+                    return true;
+                case 3:
+                    const proofType = document.getElementById('kyc-proof-type').value;
+                    
+                    if (!proofType) {
+                        showToast('Please select proof type', 'error');
+                        return false;
+                    }
+                    return true;
+            }
+            return true;
+        }
+
+        function populateReviewContent() {
+            const reviewContent = document.getElementById('kyc-review-content');
+            reviewContent.innerHTML = `
+                <div style="margin-bottom: 1rem;">
+                    <strong>Personal Information:</strong><br>
+                    Name: ${document.getElementById('kyc-fullname').value}<br>
+                    DOB: ${document.getElementById('kyc-dob').value}<br>
+                    Nationality: ${document.getElementById('kyc-nationality').value}<br>
+                    Address: ${document.getElementById('kyc-address').value}
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <strong>ID Verification:</strong><br>
+                    Document Type: ${document.getElementById('kyc-id-type').value}<br>
+                    ID Number: ${document.getElementById('kyc-id-number').value}
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <strong>Address Proof:</strong><br>
+                    Document Type: ${document.getElementById('kyc-proof-type').value}
+                </div>
+                <p style="color: var(--gray); font-size: 0.9rem;">
+                    By submitting, you confirm that all information provided is accurate and complete.
+                    Verification may take 1-3 business days.
+                </p>
+            `;
+        }
+
+        async function submitKyc() {
+            try {
+                // Update user KYC status
+                await window.firestore.updateDoc(window.firestore.doc(window.db, 'users', currentUser.uid), {
+                    kycStatus: 'pending',
+                    kycSubmittedAt: new Date().toISOString()
+                });
+                
+                // Create KYC submission record
+                await window.firestore.addDoc(window.firestore.collection(window.db, 'kyc_submissions'), {
+                    userId: currentUser.uid,
+                    status: 'pending',
+                    submittedAt: new Date().toISOString(),
+                    personalInfo: {
+                        fullName: document.getElementById('kyc-fullname').value,
+                        dob: document.getElementById('kyc-dob').value,
+                        nationality: document.getElementById('kyc-nationality').value,
+                        address: document.getElementById('kyc-address').value
+                    },
+                    idInfo: {
+                        type: document.getElementById('kyc-id-type').value,
+                        number: document.getElementById('kyc-id-number').value
+                    },
+                    addressProof: {
+                        type: document.getElementById('kyc-proof-type').value
+                    }
+                });
+                
+                // Update UI
+                userData.kycStatus = 'pending';
+                updateUIWithUserData();
+                
+                // Show success message
+                showToast('KYC submitted successfully! Verification takes 1-3 business days.', 'success');
+                
+                // Reset KYC form and go back to dashboard
+                setTimeout(() => {
+                    switchSection('dashboard');
+                    resetKycForm();
+                }, 2000);
+                
+            } catch (error) {
+                showToast('Error submitting KYC: ' + error.message, 'error');
+            }
+        }
+
+        function resetKycForm() {
+            currentKycStep = 1;
+            document.querySelectorAll('.kyc-step').forEach((step, index) => {
+                step.classList.toggle('active', index === 0);
+            });
+            document.querySelectorAll('[id^="kyc-step"]').forEach((form, index) => {
+                form.style.display = index === 0 ? 'block' : 'none';
+            });
+            document.getElementById('kyc-personal-form').reset();
+            document.getElementById('kyc-id-form').reset();
+            document.getElementById('kyc-address-form').reset();
+        }
+
+        async function verifyEmail() {
+            if (!currentUser) return;
+            
+            try {
+                await window.sendEmailVerification(currentUser);
+                showToast('Verification email sent! Check your inbox.', 'success');
+            } catch (error) {
+                showToast('Error sending verification email: ' + error.message, 'error');
+            }
+        }
+
+        async function resetPassword(email) {
+            try {
+                await window.sendPasswordResetEmail(window.auth, email);
+                showAuthMessage('Password reset email sent! Check your inbox.', 'success');
+            } catch (error) {
+                showAuthMessage('Error sending password reset email: ' + error.message, 'error');
+            }
+        }
+
+        async function signOutUser() {
+            try {
+                await window.signOut(window.auth);
+                showToast('Successfully signed out!', 'success');
+            } catch (error) {
+                showToast('Error signing out: ' + error.message, 'error');
+            }
+        }
+
+        function updateEmailVerificationStatus() {
+            if (!currentUser) return;
+            
+            const verifyEmailBtn = document.getElementById('verify-email-btn');
+            if (currentUser.emailVerified) {
+                verifyEmailBtn.innerHTML = '<i class="fas fa-check-circle"></i> Email Verified';
+                verifyEmailBtn.disabled = true;
+            } else {
+                verifyEmailBtn.innerHTML = '<i class="fas fa-envelope"></i> Verify Email';
+                verifyEmailBtn.disabled = false;
+            }
+        }
+
+        function updatePlatformStatus() {
+            const now = new Date();
+            const day = now.getDay();
+            const hour = now.getHours();
+            const minute = now.getMinutes();
+            
+            const statusIndicator = document.getElementById('status-indicator');
+            const statusText = document.getElementById('platform-status-text');
+            
+            const isWorkingDay = day >= 1 && day <= 6;
+            const isWorkingHour = hour >= 9 && hour < 18;
+            
+            if (isWorkingDay && isWorkingHour) {
+                statusIndicator.className = 'status-indicator status-open';
+                const closeHour = 18;
+                const hoursLeft = closeHour - hour - (minute > 0 ? 1 : 0);
+                const minutesLeft = 60 - minute;
+                statusText.textContent = `Open • Closes in ${hoursLeft}h ${minutesLeft}m`;
+            } else {
+                statusIndicator.className = 'status-indicator status-closed';
+                
+                let daysUntilOpen = 0;
+                let nextOpenHour = 9;
+                
+                if (day === 0) {
+                    daysUntilOpen = 1;
+                } else if (day === 6 && hour >= 18) {
+                    daysUntilOpen = 2;
+                } else if (hour < 9) {
+                    nextOpenHour = 9;
+                } else if (hour >= 18) {
+                    daysUntilOpen = 1;
+                    nextOpenHour = 9;
+                }
+                
+                if (daysUntilOpen > 0) {
+                    statusText.textContent = `Closed • Opens ${daysUntilOpen === 1 ? 'tomorrow' : 'Monday'} at 9AM`;
+                } else {
+                    const hoursUntilOpen = nextOpenHour - hour;
+                    const minutesUntilOpen = 60 - minute;
+                    statusText.textContent = `Closed • Opens in ${hoursUntilOpen}h ${minutesUntilOpen}m`;
+                }
+            }
+        }
+
+        async function investPackage(packageName, amount, dailyReturn) {
+            if (!currentUser) {
+                showToast('Please sign in to invest', 'error');
+                switchSection('signout');
+                return;
+            }
+            
+            if (userData.kycStatus !== 'verified') {
+                showToast('Please complete KYC verification first', 'error');
+                switchSection('kyc');
+                return;
+            }
+            
+            if (userData.currentAccount < amount) {
+                showToast('Insufficient balance. Please deposit funds first.', 'error');
+                switchSection('deposit');
+                return;
+            }
+            
+            try {
+                // Calculate investment details
+                const contractDays = 60;
+                const startDate = new Date();
+                const endDate = new Date(startDate.getTime() + contractDays * 24 * 60 * 60 * 1000);
+                const totalReturn = amount + (amount * (dailyReturn / 100) * contractDays);
+                
+                // Create investment record
+                await window.firestore.addDoc(window.firestore.collection(window.db, 'investments'), {
+                    userId: currentUser.uid,
+                    packageName: packageName,
+                    amount: amount,
+                    dailyReturn: dailyReturn,
+                    startDate: startDate.toISOString(),
+                    endDate: endDate.toISOString(),
+                    status: 'active',
+                    createdAt: new Date().toISOString(),
+                    currency: 'CNY',
+                    totalReturn: totalReturn
+                });
+                
+                // Update user balance
+                await window.firestore.updateDoc(
+                    window.firestore.doc(window.db, 'users', currentUser.uid),
+                    {
+                        currentAccount: window.firestore.increment(-amount),
+                        totalInvested: window.firestore.increment(amount)
+                    }
+                );
+                
+                // Update userData
+                userData.currentAccount -= amount;
+                userData.totalInvested = (userData.totalInvested || 0) + amount;
+                
+                // Create transaction record
+                await window.firestore.addDoc(window.firestore.collection(window.db, 'transactions'), {
+                    userId: currentUser.uid,
+                    type: 'investment',
+                    amount: amount,
+                    currency: 'CNY',
+                    status: 'completed',
+                    description: `Invested in ${packageName} (${dailyReturn}% daily for 60 days)`,
+                    timestamp: new Date().toISOString(),
+                    reference: 'INV-' + Date.now(),
+                    details: {
+                        packageName: packageName,
+                        dailyReturn: dailyReturn,
+                        contractDays: contractDays,
+                        totalReturn: totalReturn
+                    }
+                });
+                
+                showToast(`Successfully invested ¥${amount} in ${packageName}! Daily earnings: ¥${(amount * dailyReturn / 100).toFixed(2)}`, 'success');
+                
+                // Refresh data
+                updateUIWithUserData();
+                loadDashboardData();
+                loadMyInvestments();
+                
+            } catch (error) {
+                showToast('Error processing investment: ' + error.message, 'error');
+            }
+        }
+
+        function generateReferralCode() {
+            return 'MACSUN-' + Math.random().toString(36).substr(2, 8).toUpperCase();
+        }
+
+        function copyReferralLink() {
+            const link = document.getElementById('referral-link');
+            navigator.clipboard.writeText(link.value).then(() => {
+                showToast('Referral link copied to clipboard!', 'success');
+            });
+        }
+
+        function openWhatsApp() {
+            const phone = '0273315392';
+            const message = 'Hello Macsun Energies Admin, I need assistance with my account.';
+            const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+            window.open(url, '_blank');
+        }
+
+        function downloadApp(type) {
+            let url = '';
+            let message = '';
+            
+            switch(type) {
+                case 'android':
+                    url = 'https://example.com/macsun-android.apk';
+                    message = 'Android app download started';
+                    break;
+                case 'iphone':
+                    url = 'https://apps.apple.com/app/macsun-energies/id123456789';
+                    message = 'Redirecting to App Store';
+                    break;
+                case 'desktop':
+                    url = 'https://example.com/macsun-desktop.exe';
+                    message = 'Desktop app download started';
+                    break;
+                case 'web':
+                    url = 'https://macsun-energies.site';
+                    message = 'Opening web application';
+                    break;
+            }
+            
+            showToast(message, 'success');
+            if (url) {
+                window.open(url, '_blank');
+            }
+        }
+
+        function updateWithdrawBalances() {
+            if (!userData) return;
+            
+            document.getElementById('current-balance-display').textContent = `¥${userData.currentAccount?.toFixed(2) || '0.00'}`;
+            document.getElementById('bonus-balance-display').textContent = `¥${userData.bonusAccount?.toFixed(2) || '0.00'}`;
+        }
+
+        function updateWithdrawLimits() {
+            const account = document.getElementById('withdraw-account').value;
+            const minAmount = document.getElementById('withdraw-cny');
+            
+            if (account === 'bonus') {
+                minAmount.min = 100;
+                minAmount.placeholder = 'Minimum: ¥100';
+            } else {
+                minAmount.min = 100;
+                minAmount.placeholder = 'Minimum: ¥100';
+            }
+        }
+
+        function showAuthMessage(message, type = 'error', formType = 'login') {
+            const messageElement = document.getElementById(formType === 'login' ? 'auth-message' : 'signup-message');
+            messageElement.textContent = message;
+            messageElement.className = `auth-message ${type}`;
+            messageElement.style.display = 'block';
+        }
+
+        function clearAuthMessages() {
+            document.getElementById('auth-message').style.display = 'none';
+            document.getElementById('signup-message').style.display = 'none';
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast';
+            
+            if (type === 'error') {
+                toast.style.background = 'linear-gradient(135deg, var(--danger), #EF476F)';
+            } else if (type === 'success') {
+                toast.style.background = 'linear-gradient(135deg, var(--success), #06D6A0)';
+            } else {
+                toast.style.background = 'linear-gradient(135deg, var(--primary), var(--primary-dark))';
+            }
+            
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+      </script>
+</body>
+</html>
