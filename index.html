@@ -13,8 +13,6 @@
         getAuth, 
         signInWithEmailAndPassword, 
         createUserWithEmailAndPassword, 
-        signInWithPopup, 
-        GoogleAuthProvider,
         signOut,
         sendEmailVerification,
         sendPasswordResetEmail,
@@ -48,14 +46,11 @@
       const app = initializeApp(firebaseConfig);
       const auth = getAuth(app);
       const db = getFirestore(app);
-      const googleProvider = new GoogleAuthProvider();
 
       window.auth = auth;
       window.db = db;
       window.signInWithEmailAndPassword = signInWithEmailAndPassword;
       window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
-      window.signInWithPopup = signInWithPopup;
-      window.googleProvider = googleProvider;
       window.signOut = signOut;
       window.sendEmailVerification = sendEmailVerification;
       window.sendPasswordResetEmail = sendPasswordResetEmail;
@@ -1734,15 +1729,6 @@
                 </button>
             </form>
             
-            <div class="divider">
-                <span>Or</span>
-            </div>
-            
-            <button class="btn btn-block" id="google-signin" style="background: var(--light); color: var(--dark); border: 2px solid var(--light-gray);">
-                <i class="fab fa-google"></i>
-                Sign in with Google
-            </button>
-            
             <p style="margin-top: 2rem; color: var(--gray);">
                 Don't have an account? <a href="#" id="show-signup" style="color: var(--primary); text-decoration: none; font-weight: 600;">Sign up</a>
             </p>
@@ -1805,15 +1791,6 @@
                     Create Account
                 </button>
             </form>
-            
-            <div class="divider">
-                <span>Or</span>
-            </div>
-            
-            <button class="btn btn-block" id="google-signup" style="background: var(--light); color: var(--dark); border: 2px solid var(--light-gray);">
-                <i class="fab fa-google"></i>
-                Sign up with Google
-            </button>
             
             <p style="margin-top: 2rem; color: var(--gray);">
                 Already have an account? <a href="#" id="show-login" style="color: var(--primary); text-decoration: none; font-weight: 600;">Sign in</a>
@@ -3313,13 +3290,7 @@
                 const dashboardPage = document.getElementById('dashboard-page');
                 
                 if (user) {
-                    // User is signed in - check email verification
-                    if (!user.emailVerified) {
-                        showAuthMessage('Please verify your email address before logging in.', 'error');
-                        await window.signOut(window.auth);
-                        return;
-                    }
-                    
+                    // User is signed in - allow login without email verification
                     currentUser = user;
                     loginPage.style.display = 'none';
                     dashboardPage.style.display = 'flex';
@@ -3363,15 +3334,6 @@
                 });
             }
 
-            // Google Sign In
-            document.getElementById('google-signin')?.addEventListener('click', async () => {
-                await handleGoogleSignIn();
-            });
-
-            document.getElementById('google-signup')?.addEventListener('click', async () => {
-                await handleGoogleSignIn();
-            });
-
             // Forgot Password
             document.getElementById('forgot-password')?.addEventListener('click', async function(e) {
                 e.preventDefault();
@@ -3410,21 +3372,12 @@
             loginBtn.disabled = true;
 
             try {
-                const userCredential = await window.signInWithEmailAndPassword(window.auth, email, password);
-                
-                // Check if email is verified
-                if (!userCredential.user.emailVerified) {
-                    await window.signOut(window.auth);
-                    throw new Error('EMAIL_NOT_VERIFIED');
-                }
-                
+                // Remove email verification check - allow login without verification
+                await window.signInWithEmailAndPassword(window.auth, email, password);
                 showAuthMessage('Successfully signed in!', 'success');
             } catch (error) {
                 let errorMessage = 'An error occurred during sign in.';
-                switch (error.message) {
-                    case 'EMAIL_NOT_VERIFIED':
-                        errorMessage = 'Please verify your email address before logging in. Check your inbox for verification email.';
-                        break;
+                switch (error.code) {
                     case 'auth/user-not-found':
                     case 'auth/wrong-password':
                         errorMessage = 'Invalid email or password.';
@@ -3498,18 +3451,23 @@
                     totalEarned: 0
                 });
 
-                // Send verification email
-                await window.sendEmailVerification(userCredential.user);
+                // Try to send verification email (but don't require it for login)
+                try {
+                    await window.sendEmailVerification(userCredential.user);
+                    showAuthMessage('Account created! Verification email sent. You can now login.', 'success', 'signup');
+                } catch (emailError) {
+                    // If email verification fails, still allow account creation
+                    console.warn('Email verification could not be sent:', emailError);
+                    showAuthMessage('Account created! You can now login.', 'success', 'signup');
+                }
                 
-                showAuthMessage('Account created! Please check your email for verification. You must verify your email before logging in.', 'success', 'signup');
-                
-                // Auto-switch to login after 5 seconds
+                // Auto-switch to login after 3 seconds
                 setTimeout(() => {
                     document.getElementById('signup-card').style.display = 'none';
                     document.getElementById('login-card').style.display = 'block';
                     clearAuthMessages();
                     document.getElementById('login-email').value = email;
-                }, 5000);
+                }, 3000);
                 
             } catch (error) {
                 let errorMessage = 'An error occurred during sign up.';
@@ -3527,44 +3485,6 @@
             } finally {
                 signupBtn.innerHTML = originalText;
                 signupBtn.disabled = false;
-            }
-        }
-
-        async function handleGoogleSignIn() {
-            try {
-                const result = await window.signInWithPopup(window.auth, window.googleProvider);
-                const user = result.user;
-                
-                // Check if user document exists
-                const userDoc = await window.firestore.getDoc(window.firestore.doc(window.db, 'users', user.uid));
-                
-                if (!userDoc.exists()) {
-                    // Generate unique UID for user
-                    const userUid = 'MACSUN-' + user.uid.substring(0, 8).toUpperCase();
-                    
-                    // Create new user document for Google sign-in
-                    await createUserDocument(user.uid, {
-                        uid: userUid,
-                        name: user.displayName || 'User',
-                        email: user.email,
-                        phone: '',
-                        country: '',
-                        createdAt: new Date().toISOString(),
-                        currentAccount: 0,
-                        bonusAccount: 0,
-                        kycStatus: 'not_verified',
-                        referralCode: generateReferralCode(),
-                        level: 'basic',
-                        withdrawPassword: '0000', // Default withdrawal password
-                        emailVerified: true, // Google accounts are considered verified
-                        totalInvested: 0,
-                        totalEarned: 0
-                    });
-                }
-                
-                showAuthMessage('Successfully signed in with Google!', 'success');
-            } catch (error) {
-                showAuthMessage('Error signing in with Google: ' + error.message, 'error');
             }
         }
 
@@ -4553,6 +4473,6 @@
                 toast.classList.remove('show');
             }, 3000);
         }
-    </script>
+      </script>
 </body>
 </html>
