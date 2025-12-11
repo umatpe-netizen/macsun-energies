@@ -31,7 +31,8 @@
         query,
         where,
         getDocs,
-        addDoc
+        addDoc,
+        increment
       } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
       // Your updated Firebase configuration
@@ -61,7 +62,7 @@
       window.onAuthStateChanged = onAuthStateChanged;
       window.firestore = {
         collection, doc, setDoc, getDoc, updateDoc, serverTimestamp,
-        query, where, getDocs, addDoc
+        query, where, getDocs, addDoc, increment
       };
     </script>
     
@@ -1368,7 +1369,6 @@
             border-radius: 10px;
             margin: 1rem 0;
             border: 2px solid var(--primary-light);
-            display: none;
         }
 
         .currency-display {
@@ -1378,6 +1378,148 @@
             margin-top: 0.5rem;
             padding-top: 0.5rem;
             border-top: 1px dashed var(--light-gray);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1100;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            animation: slideUp 0.3s ease;
+        }
+
+        .modal-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h3 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--gray);
+            cursor: pointer;
+        }
+
+        /* Investment Rotation Animation */
+        .rotating-investment {
+            animation: rotateEarn 20s linear infinite;
+            position: relative;
+        }
+
+        @keyframes rotateEarn {
+            0% { transform: rotateY(0deg); }
+            100% { transform: rotateY(360deg); }
+        }
+
+        .investment-visual {
+            width: 100%;
+            height: 200px;
+            position: relative;
+            perspective: 1000px;
+            margin: 1rem 0;
+        }
+
+        .investment-visual-inner {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.8s;
+            transform-style: preserve-3d;
+            animation: rotateEarn 20s linear infinite;
+        }
+
+        .investment-visual-front, 
+        .investment-visual-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 2rem;
+        }
+
+        .investment-visual-front {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .investment-visual-back {
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            color: white;
+            transform: rotateY(180deg);
+        }
+
+        /* Download Section */
+        .download-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .download-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            border: 2px solid var(--light-gray);
+            cursor: pointer;
+        }
+
+        .download-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+        }
+
+        .download-icon {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .download-card h3 {
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .download-card p {
+            color: var(--gray);
+            font-size: 0.9rem;
         }
 
         /* Mobile-specific adjustments */
@@ -1479,6 +1621,15 @@
             
             .blog-grid {
                 grid-template-columns: 1fr;
+            }
+            
+            .download-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .modal-content {
+                padding: 1.5rem;
+                width: 95%;
             }
         }
 
@@ -1630,6 +1781,9 @@
                     <input type="password" id="signup-confirm-password" class="form-control" placeholder="Confirm Password" required>
                 </div>
                 <div class="form-group">
+                    <input type="password" id="signup-withdraw-password" class="form-control" placeholder="Withdrawal Password (min. 4 digits)" required minlength="4">
+                </div>
+                <div class="form-group">
                     <select id="signup-country" class="form-control" required>
                         <option value="">Select Country</option>
                         <option value="GH">Ghana</option>
@@ -1716,6 +1870,10 @@
                             <div class="profile-avatar" id="profile-avatar">U</div>
                             <h3 class="profile-name" id="profile-name">User</h3>
                             <p class="profile-email" id="profile-email">user@example.com</p>
+                            <div class="profile-badge" id="uid-display">
+                                <i class="fas fa-id-card"></i>
+                                <span id="uid-text">Loading...</span>
+                            </div>
                             <div class="profile-badge" id="kyc-status-badge">
                                 <i class="fas fa-shield-alt"></i>
                                 <span>KYC: Not Verified</span>
@@ -1724,16 +1882,16 @@
                         <div class="user-profile-content">
                             <div class="profile-info-grid">
                                 <div class="profile-info-item">
-                                    <div class="profile-info-label">Account Balance</div>
-                                    <div class="profile-info-value">¥0.00</div>
+                                    <div class="profile-info-label">Current Account</div>
+                                    <div class="profile-info-value" id="current-account-balance">¥0.00</div>
                                 </div>
                                 <div class="profile-info-item">
-                                    <div class="profile-info-label">Active Investments</div>
-                                    <div class="profile-info-value">0</div>
+                                    <div class="profile-info-label">Bonus Account</div>
+                                    <div class="profile-info-value" id="bonus-account-balance">¥0.00</div>
                                 </div>
                                 <div class="profile-info-item">
-                                    <div class="profile-info-label">Total Profit</div>
-                                    <div class="profile-info-value">¥0.00</div>
+                                    <div class="profile-info-label">Active Plans</div>
+                                    <div class="profile-info-value" id="active-plans-count">0</div>
                                 </div>
                                 <div class="profile-info-item">
                                     <div class="profile-info-label">Member Since</div>
@@ -1750,9 +1908,9 @@
                                 <i class="fas fa-id-card"></i>
                                 Complete KYC
                             </button>
-                            <button class="profile-action-btn" id="change-password">
-                                <i class="fas fa-key"></i>
-                                Change Password
+                            <button class="profile-action-btn" id="download-app-btn">
+                                <i class="fas fa-download"></i>
+                                Download App
                             </button>
                             <button class="profile-action-btn" id="profile-signout">
                                 <i class="fas fa-sign-out-alt"></i>
@@ -1766,6 +1924,26 @@
 
         <div class="overlay" id="overlay"></div>
         <div class="toast" id="toast"></div>
+
+        <!-- Withdrawal Password Modal -->
+        <div class="modal" id="withdraw-password-modal">
+            <div class="modal-content">
+                <button class="modal-close" id="close-withdraw-modal">&times;</button>
+                <div class="modal-header">
+                    <h3>Enter Withdrawal Password</h3>
+                    <p>Please enter your 4-digit withdrawal password to proceed</p>
+                </div>
+                <form id="withdraw-password-form">
+                    <div class="form-group">
+                        <input type="password" id="withdraw-password-input" class="form-control" placeholder="Enter 4-digit withdrawal password" maxlength="4" pattern="\d{4}" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-unlock"></i>
+                        Verify & Proceed
+                    </button>
+                </form>
+            </div>
+        </div>
 
         <div class="main-content">
             <aside class="sidebar" id="sidebar">
@@ -1802,6 +1980,10 @@
                         <i class="fas fa-users"></i>
                         <span>Referral Program</span>
                     </li>
+                    <li class="menu-item" data-target="download">
+                        <i class="fas fa-download"></i>
+                        <span>Download App</span>
+                    </li>
                     <li class="menu-item" data-target="about">
                         <i class="fas fa-info-circle"></i>
                         <span>About Us</span>
@@ -1831,11 +2013,18 @@
 
                     <div class="stats-grid">
                         <div class="stat-card">
-                            <h3>Total Balance</h3>
+                            <h3>Current Account</h3>
                             <div class="value" id="total-balance">¥0.00</div>
                             <div class="change positive">
                                 <i class="fas fa-arrow-up"></i>
                                 <span>Ready to invest</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Bonus Account</h3>
+                            <div class="value" id="bonus-balance">¥0.00</div>
+                            <div class="change">
+                                <span>Promotional funds</span>
                             </div>
                         </div>
                         <div class="stat-card">
@@ -1850,13 +2039,6 @@
                             <div class="value" id="daily-earnings">¥0.00</div>
                             <div class="change">
                                 <span>Will update after investment</span>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <h3>Total Returns</h3>
-                            <div class="value" id="total-returns">¥0.00</div>
-                            <div class="change">
-                                <span>Your journey starts here</span>
                             </div>
                         </div>
                     </div>
@@ -1878,9 +2060,9 @@
                             <h3><i class="fas fa-id-card"></i> Complete KYC</h3>
                             <p style="color: var(--gray); margin-top: 10px; font-size: 0.85rem;">Verify your identity to unlock full features</p>
                         </div>
-                        <div class="stat-card" style="cursor: pointer;" onclick="switchSection('referral')">
-                            <h3><i class="fas fa-users"></i> Invite Friends</h3>
-                            <p style="color: var(--gray); margin-top: 10px; font-size: 0.85rem;">Earn rewards by referring friends</p>
+                        <div class="stat-card" style="cursor: pointer;" onclick="switchSection('download')">
+                            <h3><i class="fas fa-download"></i> Download App</h3>
+                            <p style="color: var(--gray); margin-top: 10px; font-size: 0.85rem;">Get our app for better experience</p>
                         </div>
                     </div>
 
@@ -1920,140 +2102,23 @@
                 <section id="invest" class="section">
                     <div class="welcome-message">
                         <h1>Solar Investment Packages</h1>
-                        <p>Choose from our carefully curated solar energy investment plans</p>
+                        <p>Choose from our carefully curated solar energy investment plans with 3D panels</p>
                         <div class="conversion-notice">
                             <i class="fas fa-info-circle"></i>
-                            All amounts are in Chinese Yuan (¥). The system automatically converts to Ghana Cedis (GH₵) at a rate of 1¥ = 2 GH₵.
+                            All amounts are in Chinese Yuan (¥). Convert from USD: $1 = ¥10. Minimum deposit: $10 = ¥100 = GH₵200
                         </div>
                     </div>
 
                     <div class="packages-grid">
-                        <!-- Package 1: 100 Yuan -->
+                        <!-- Package 1: 100 Yuan / $10 -->
                         <div class="package-card">
-                            <div class="package-badge">Beginner</div>
+                            <div class="package-badge">Basic 3D</div>
                             <div class="package-header">
                                 <div class="package-image">
-                                    <img src="https://images.unsplash.com/photo-1509391366360-2e959784a276?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTR8fHNvbGFyJTIwcGFuZWx8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=60" alt="Solar Panel">
+                                    <i class="fas fa-cube" style="font-size: 2.5rem; color: var(--secondary);"></i>
                                 </div>
-                                <h3 class="package-title">Mini Solar Starter</h3>
-                                <p class="package-subtitle">Perfect for beginners</p>
-                            </div>
-                            <div class="package-content">
-                                <div class="package-features">
-                                    <div class="package-feature">
-                                        <i class="fas fa-check-circle"></i>
-                                        <span>Daily Return: 1.8%</span>
-                                    </div>
-                                    <div class="package-feature">
-                                        <i class="fas fa-check-circle"></i>
-                                        <span>Contract Period: 60 days</span>
-                                    </div>
-                                    <div class="package-feature">
-                                        <i class="fas fa-check-circle"></i>
-                                        <span>Total Return: 108%</span>
-                                    </div>
-                                    <div class="package-feature">
-                                        <i class="fas fa-check-circle"></i>
-                                        <span>24/7 Monitoring</span>
-                                    </div>
-                                </div>
-                                <div class="package-price">
-                                    ¥100 <span>≈ GH₵200</span>
-                                </div>
-                                <button class="btn btn-primary btn-block" onclick="investPackage('Mini Solar Starter', 100, 1.8)">
-                                    <i class="fas fa-solar-panel"></i>
-                                    Invest Now
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Package 2: 200 Yuan -->
-                        <div class="package-card">
-                            <div class="package-badge">Starter</div>
-                            <div class="package-header">
-                                <div class="package-image">
-                                    <img src="https://images.unsplash.com/photo-1466611653911-95081537e5b7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fHNvbGFyJTIwZmFybXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60" alt="Solar Farm">
-                                </div>
-                                <h3 class="package-title">Home Solar Basic</h3>
-                                <p class="package-subtitle">For home installations</p>
-                            </div>
-                            <div class="package-content">
-                                <div class="package-features">
-                                    <div class="package-feature">
-                                        <i class="fas fa-check-circle"></i>
-                                        <span>Daily Return: 2.0%</span>
-                                    </div>
-                                    <div class="package-feature">
-                                        <i class="fas fa-check-circle"></i>
-                                        <span>Contract Period: 60 days</span>
-                                    </div>
-                                    <div class="package-feature">
-                                        <i class="fas fa-check-circle"></i>
-                                        <span>Total Return: 120%</span>
-                                    </div>
-                                    <div class="package-feature">
-                                        <i class="fas fa-check-circle"></i>
-                                        <span>Mobile App Access</span>
-                                    </div>
-                                </div>
-                                <div class="package-price">
-                                    ¥200 <span>≈ GH₵400</span>
-                                </div>
-                                <button class="btn btn-primary btn-block" onclick="investPackage('Home Solar Basic', 200, 2.0)">
-                                    <i class="fas fa-solar-panel"></i>
-                                    Invest Now
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Package 3: 300 Yuan -->
-                        <div class="package-card">
-                            <div class="package-badge">Popular</div>
-                            <div class="package-header">
-                                <div class="package-image">
-                                    <img src="https://images.unsplash.com/photo-1558449028-b53a39d10009?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTV8fHNvbGFyJTIwcm9vZnRvcHxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60" alt="Solar Rooftop">
-                                </div>
-                                <h3 class="package-title">Solar Rooftop Pro</h3>
-                                <p class="package-subtitle">Most popular choice</p>
-                            </div>
-                            <div class="package-content">
-                                <div class="package-features">
-                                    <div class="package-feature">
-                                        <i class="fas fa-check-circle"></i>
-                                        <span>Daily Return: 2.2%</span>
-                                    </div>
-                                    <div class="package-feature">
-                                        <i class="fas fa-check-circle"></i>
-                                        <span>Contract Period: 60 days</span>
-                                    </div>
-                                    <div class="package-feature">
-                                        <i class="fas fa-check-circle"></i>
-                                        <span>Total Return: 132%</span>
-                                    </div>
-                                    <div class="package-feature">
-                                        <i class="fas fa-check-circle"></i>
-                                        <span>Priority Support</span>
-                                    </div>
-                                </div>
-                                <div class="package-price">
-                                    ¥300 <span>≈ GH₵600</span>
-                                </div>
-                                <button class="btn btn-primary btn-block" onclick="investPackage('Solar Rooftop Pro', 300, 2.2)">
-                                    <i class="fas fa-solar-panel"></i>
-                                    Invest Now
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Package 4: 500 Yuan -->
-                        <div class="package-card">
-                            <div class="package-badge">Advanced</div>
-                            <div class="package-header">
-                                <div class="package-image">
-                                    <img src="https://images.unsplash.com/photo-1497440001374-f26997328c1b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTh8fHNvbGFyJTIwZmFybSUyMGxhcmdlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60" alt="Solar Farm Large">
-                                </div>
-                                <h3 class="package-title">Commercial Solar Plus</h3>
-                                <p class="package-subtitle">For business investments</p>
+                                <h3 class="package-title">3D Solar Starter</h3>
+                                <p class="package-subtitle">Entry-level 3D panel</p>
                             </div>
                             <div class="package-content">
                                 <div class="package-features">
@@ -2071,34 +2136,34 @@
                                     </div>
                                     <div class="package-feature">
                                         <i class="fas fa-check-circle"></i>
-                                        <span>Weekly Reports</span>
+                                        <span>24/7 3D Monitoring</span>
                                     </div>
                                 </div>
                                 <div class="package-price">
-                                    ¥500 <span>≈ GH₵1000</span>
+                                    ¥100 <span>≈ $10 ≈ GH₵200</span>
                                 </div>
-                                <button class="btn btn-primary btn-block" onclick="investPackage('Commercial Solar Plus', 500, 2.5)">
+                                <button class="btn btn-primary btn-block" onclick="investPackage('3D Solar Starter', 100, 2.5)">
                                     <i class="fas fa-solar-panel"></i>
                                     Invest Now
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Package 5: 700 Yuan -->
+                        <!-- Package 2: 200 Yuan / $20 -->
                         <div class="package-card">
-                            <div class="package-badge">Premium</div>
+                            <div class="package-badge">Standard 3D</div>
                             <div class="package-header">
                                 <div class="package-image">
-                                    <img src="https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjB8fHNvbGFyJTIwcGFuZWwlMjBmYXJtfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60" alt="Solar Array">
+                                    <i class="fas fa-cubes" style="font-size: 2.5rem; color: var(--secondary);"></i>
                                 </div>
-                                <h3 class="package-title">Industrial Solar Array</h3>
-                                <p class="package-subtitle">High capacity investment</p>
+                                <h3 class="package-title">3D Solar Advanced</h3>
+                                <p class="package-subtitle">Advanced 3D panel system</p>
                             </div>
                             <div class="package-content">
                                 <div class="package-features">
                                     <div class="package-feature">
                                         <i class="fas fa-check-circle"></i>
-                                        <span>Daily Return: 2.8%</span>
+                                        <span>Daily Return: 2.4%</span>
                                     </div>
                                     <div class="package-feature">
                                         <i class="fas fa-check-circle"></i>
@@ -2106,38 +2171,38 @@
                                     </div>
                                     <div class="package-feature">
                                         <i class="fas fa-check-circle"></i>
-                                        <span>Total Return: 168%</span>
+                                        <span>Total Return: 144%</span>
                                     </div>
                                     <div class="package-feature">
                                         <i class="fas fa-check-circle"></i>
-                                        <span>Dedicated Manager</span>
+                                        <span>3D Visualization</span>
                                     </div>
                                 </div>
                                 <div class="package-price">
-                                    ¥700 <span>≈ GH₵1400</span>
+                                    ¥200 <span>≈ $20 ≈ GH₵400</span>
                                 </div>
-                                <button class="btn btn-primary btn-block" onclick="investPackage('Industrial Solar Array', 700, 2.8)">
+                                <button class="btn btn-primary btn-block" onclick="investPackage('3D Solar Advanced', 200, 2.4)">
                                     <i class="fas fa-solar-panel"></i>
                                     Invest Now
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Package 6: 1000 Yuan -->
+                        <!-- Package 3: 300 Yuan / $30 -->
                         <div class="package-card">
-                            <div class="package-badge">Elite</div>
+                            <div class="package-badge">Premium 3D</div>
                             <div class="package-header">
                                 <div class="package-image">
-                                    <img src="https://images.unsplash.com/photo-1542332213-9b5a5a3f9854?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjN8fHNvbGFyJTIwcG93ZXIlMjBwbGFudHxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60" alt="Solar Power Plant">
+                                    <i class="fas fa-boxes" style="font-size: 2.5rem; color: var(--secondary);"></i>
                                 </div>
-                                <h3 class="package-title">Solar Power Plant</h3>
-                                <p class="package-subtitle">For serious investors</p>
+                                <h3 class="package-title">3D Solar Premium</h3>
+                                <p class="package-subtitle">Premium 3D panel array</p>
                             </div>
                             <div class="package-content">
                                 <div class="package-features">
                                     <div class="package-feature">
                                         <i class="fas fa-check-circle"></i>
-                                        <span>Daily Return: 3.0%</span>
+                                        <span>Daily Return: 2.3%</span>
                                     </div>
                                     <div class="package-feature">
                                         <i class="fas fa-check-circle"></i>
@@ -2145,38 +2210,38 @@
                                     </div>
                                     <div class="package-feature">
                                         <i class="fas fa-check-circle"></i>
-                                        <span>Total Return: 180%</span>
+                                        <span>Total Return: 138%</span>
                                     </div>
                                     <div class="package-feature">
                                         <i class="fas fa-check-circle"></i>
-                                        <span>VIP Support</span>
+                                        <span>3D Performance Tracking</span>
                                     </div>
                                 </div>
                                 <div class="package-price">
-                                    ¥1000 <span>≈ GH₵2000</span>
+                                    ¥300 <span>≈ $30 ≈ GH₵600</span>
                                 </div>
-                                <button class="btn btn-primary btn-block" onclick="investPackage('Solar Power Plant', 1000, 3.0)">
+                                <button class="btn btn-primary btn-block" onclick="investPackage('3D Solar Premium', 300, 2.3)">
                                     <i class="fas fa-solar-panel"></i>
                                     Invest Now
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Package 7: 2000 Yuan -->
+                        <!-- Package 4: 500 Yuan / $50 -->
                         <div class="package-card">
-                            <div class="package-badge">Ultimate</div>
+                            <div class="package-badge">Ultimate 3D</div>
                             <div class="package-header">
                                 <div class="package-image">
-                                    <img src="https://images.unsplash.com/photo-1613665813446-82a78c468a1d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjZ8fHNvbGFyJTIwZ3JpZHxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60" alt="Solar Grid">
+                                    <i class="fas fa-th-large" style="font-size: 2.5rem; color: var(--secondary);"></i>
                                 </div>
-                                <h3 class="package-title">Solar Grid Master</h3>
-                                <p class="package-subtitle">Maximum returns</p>
+                                <h3 class="package-title">3D Solar Ultimate</h3>
+                                <p class="package-subtitle">Ultimate 3D panel system</p>
                             </div>
                             <div class="package-content">
                                 <div class="package-features">
                                     <div class="package-feature">
                                         <i class="fas fa-check-circle"></i>
-                                        <span>Daily Return: 3.5%</span>
+                                        <span>Daily Return: 2.2%</span>
                                     </div>
                                     <div class="package-feature">
                                         <i class="fas fa-check-circle"></i>
@@ -2184,17 +2249,95 @@
                                     </div>
                                     <div class="package-feature">
                                         <i class="fas fa-check-circle"></i>
-                                        <span>Total Return: 210%</span>
+                                        <span>Total Return: 132%</span>
                                     </div>
                                     <div class="package-feature">
                                         <i class="fas fa-check-circle"></i>
-                                        <span>Executive Concierge</span>
+                                        <span>3D Real-time Analytics</span>
                                     </div>
                                 </div>
                                 <div class="package-price">
-                                    ¥2000 <span>≈ GH₵4000</span>
+                                    ¥500 <span>≈ $50 ≈ GH₵1000</span>
                                 </div>
-                                <button class="btn btn-primary btn-block" onclick="investPackage('Solar Grid Master', 2000, 3.5)">
+                                <button class="btn btn-primary btn-block" onclick="investPackage('3D Solar Ultimate', 500, 2.2)">
+                                    <i class="fas fa-solar-panel"></i>
+                                    Invest Now
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Package 5: 700 Yuan / $70 -->
+                        <div class="package-card">
+                            <div class="package-badge">Pro 3D</div>
+                            <div class="package-header">
+                                <div class="package-image">
+                                    <i class="fas fa-cube" style="font-size: 2.5rem; color: var(--secondary);"></i>
+                                </div>
+                                <h3 class="package-title">3D Solar Pro</h3>
+                                <p class="package-subtitle">Professional 3D panel network</p>
+                            </div>
+                            <div class="package-content">
+                                <div class="package-features">
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Daily Return: 2.1%</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Contract Period: 60 days</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Total Return: 126%</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>3D AI Optimization</span>
+                                    </div>
+                                </div>
+                                <div class="package-price">
+                                    ¥700 <span>≈ $70 ≈ GH₵1400</span>
+                                </div>
+                                <button class="btn btn-primary btn-block" onclick="investPackage('3D Solar Pro', 700, 2.1)">
+                                    <i class="fas fa-solar-panel"></i>
+                                    Invest Now
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Package 6: 1000 Yuan / $100 -->
+                        <div class="package-card">
+                            <div class="package-badge">Master 3D</div>
+                            <div class="package-header">
+                                <div class="package-image">
+                                    <i class="fas fa-cubes" style="font-size: 2.5rem; color: var(--secondary);"></i>
+                                </div>
+                                <h3 class="package-title">3D Solar Master</h3>
+                                <p class="package-subtitle">Master 3D panel installation</p>
+                            </div>
+                            <div class="package-content">
+                                <div class="package-features">
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Daily Return: 2.0%</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Contract Period: 60 days</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Total Return: 120%</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>3D VR Monitoring</span>
+                                    </div>
+                                </div>
+                                <div class="package-price">
+                                    ¥1000 <span>≈ $100 ≈ GH₵2000</span>
+                                </div>
+                                <button class="btn btn-primary btn-block" onclick="investPackage('3D Solar Master', 1000, 2.0)">
                                     <i class="fas fa-solar-panel"></i>
                                     Invest Now
                                 </button>
@@ -2208,6 +2351,22 @@
                     <div class="welcome-message">
                         <h1>My Earns</h1>
                         <p>Track your active solar investments and their performance</p>
+                    </div>
+
+                    <!-- Investment Visual Display -->
+                    <div class="investment-visual" id="investment-visual" style="display: none;">
+                        <div class="investment-visual-inner">
+                            <div class="investment-visual-front">
+                                <i class="fas fa-solar-panel" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                                <h3 id="visual-plan-name">Active Plan</h3>
+                                <p id="visual-plan-details">Loading details...</p>
+                            </div>
+                            <div class="investment-visual-back">
+                                <i class="fas fa-coins" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                                <h3>Daily Earnings</h3>
+                                <p id="visual-plan-earnings">¥0.00/day</p>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="transactions-table">
@@ -2283,48 +2442,164 @@
                         <p>Add funds to your account to start investing</p>
                         <div class="conversion-notice">
                             <i class="fas fa-info-circle"></i>
-                            Enter amount in Chinese Yuan (¥). The system automatically converts to Ghana Cedis (GH₵) at a rate of 1¥ = 2 GH₵.
+                            Minimum deposit: $10 = ¥100 = GH₵200
                         </div>
                     </div>
 
                     <div class="kyc-form-container">
                         <h2 style="margin-bottom: 1.5rem; color: var(--dark);">Make a Deposit</h2>
-                        <div id="deposit-converter" class="currency-converter">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <div>
-                                    <strong>Conversion:</strong>
-                                    <div style="font-size: 0.9rem; color: var(--gray);">1 Chinese Yuan (¥) = 2 Ghana Cedis (GH₵)</div>
+                        
+                        <!-- Currency Converter -->
+                        <div class="currency-converter">
+                            <div class="form-group">
+                                <label>Currency Converter</label>
+                                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                                    <input type="number" id="usd-amount" class="form-control" placeholder="USD" oninput="convertCurrency('usd')" step="1" min="10">
+                                    <input type="number" id="cny-amount" class="form-control" placeholder="CNY" oninput="convertCurrency('cny')" step="100" min="100">
+                                    <input type="number" id="ghs-amount" class="form-control" placeholder="GHS" oninput="convertCurrency('ghs')" step="200" min="200">
                                 </div>
-                                <div style="text-align: right;">
-                                    <div style="font-weight: bold;" id="conversion-result">¥0 = GH₵0</div>
+                                <div style="text-align: center; font-size: 0.9rem; color: var(--gray);">
+                                    <div>Exchange Rate: $1 = ¥10 = GH₵20</div>
                                 </div>
                             </div>
                         </div>
-                        <form id="deposit-form">
-                            <div class="form-group">
-                                <label for="deposit-amount">Amount (¥ Chinese Yuan)</label>
-                                <input type="number" id="deposit-amount" class="form-control" placeholder="Enter amount in Yuan" min="100" step="100" required oninput="showCurrencyConversion(this.value, 'deposit')">
-                                <p style="margin-top: 0.5rem; color: var(--gray); font-size: 0.85rem;">Minimum deposit: ¥100 (≈ GH₵200)</p>
+                        
+                        <!-- Payment Method Selection -->
+                        <div class="form-group">
+                            <label>Select Payment Method</label>
+                            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                                <button type="button" class="btn" id="select-momo" style="flex: 1;" onclick="selectPaymentMethod('momo')">
+                                    <i class="fas fa-mobile-alt"></i> Mobile Money
+                                </button>
+                                <button type="button" class="btn" id="select-crypto" style="flex: 1;" onclick="selectPaymentMethod('crypto')">
+                                    <i class="fab fa-bitcoin"></i> Cryptocurrency
+                                </button>
                             </div>
-                            <div class="form-group">
-                                <label for="deposit-method">Payment Method</label>
-                                <select id="deposit-method" class="form-control" required>
-                                    <option value="">Select method</option>
-                                    <option value="bank-transfer">Bank Transfer</option>
-                                    <option value="mobile-money">Mobile Money (Ghana)</option>
-                                    <option value="credit-card">Credit/Debit Card</option>
-                                    <option value="crypto">Cryptocurrency</option>
-                                </select>
+                        </div>
+
+                        <!-- Mobile Money Payment Instructions -->
+                        <div id="momo-instructions" style="display: none;">
+                            <div style="background: var(--light); padding: 1rem; border-radius: 10px; margin-bottom: 1rem;">
+                                <h4 style="margin-bottom: 0.5rem; color: var(--dark);">Mobile Money Payment Instructions</h4>
+                                
+                                <div class="form-group">
+                                    <label>Select Network</label>
+                                    <select id="momo-network" class="form-control" onchange="updateMomoDetails()">
+                                        <option value="">Select network</option>
+                                        <option value="mtn">MTN Mobile Money</option>
+                                        <option value="telecel">Telecel Cash</option>
+                                    </select>
+                                </div>
+
+                                <!-- MTN Instructions -->
+                                <div id="mtn-details" style="display: none; padding: 1rem; background: rgba(255, 209, 102, 0.1); border-radius: 8px; margin-bottom: 1rem;">
+                                    <h5><i class="fas fa-info-circle"></i> MTN Mobile Money Instructions:</h5>
+                                    <ol style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                                        <li>Dial *170# on your MTN line</li>
+                                        <li>Select "Send Money"</li>
+                                        <li>Enter recipient number: <strong>0537090034</strong></li>
+                                        <li>Enter amount: <span id="mtn-amount-display">¥0</span></li>
+                                        <li>Recipient Name: <strong>SHALOM DONKOR</strong></li>
+                                        <li>Complete transaction and copy the <strong>Transaction ID</strong></li>
+                                    </ol>
+                                    <p style="margin-top: 0.5rem; color: var(--warning);">
+                                        <i class="fas fa-exclamation-triangle"></i> Transactions show as pending until admin approval
+                                    </p>
+                                </div>
+
+                                <!-- Telecel Instructions -->
+                                <div id="telecel-details" style="display: none; padding: 1rem; background: rgba(255, 209, 102, 0.1); border-radius: 8px; margin-bottom: 1rem;">
+                                    <h5><i class="fas fa-info-circle"></i> Telecel Cash Instructions:</h5>
+                                    <ol style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                                        <li>Dial *110# on your Telecel line</li>
+                                        <li>Select "Send Money"</li>
+                                        <li>Enter recipient number: <strong>0202745325</strong></li>
+                                        <li>Enter amount: <span id="telecel-amount-display">¥0</span></li>
+                                        <li>Recipient Name: <strong>Mercy Quaicoe</strong></li>
+                                        <li>Complete transaction and copy the <strong>Transaction ID</strong></li>
+                                    </ol>
+                                    <p style="margin-top: 0.5rem; color: var(--warning);">
+                                        <i class="fas fa-exclamation-triangle"></i> Transactions show as pending until admin approval
+                                    </p>
+                                </div>
+
+                                <form id="momo-deposit-form">
+                                    <div class="form-group">
+                                        <label for="transaction-id">Transaction ID</label>
+                                        <input type="text" id="transaction-id" class="form-control" placeholder="Enter transaction ID from mobile money" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="momo-amount-confirm">Amount Sent</label>
+                                        <input type="number" id="momo-amount-confirm" class="form-control" placeholder="Confirm amount sent" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-block">
+                                        <i class="fas fa-check-circle"></i>
+                                        Submit Deposit Request
+                                    </button>
+                                </form>
                             </div>
-                            <div class="form-group">
-                                <label for="deposit-notes">Notes (Optional)</label>
-                                <textarea id="deposit-notes" class="form-control" rows="3" placeholder="Add any notes for this deposit"></textarea>
+                        </div>
+
+                        <!-- Cryptocurrency Payment Instructions -->
+                        <div id="crypto-instructions" style="display: none;">
+                            <div style="background: var(--light); padding: 1rem; border-radius: 10px; margin-bottom: 1rem;">
+                                <h4 style="margin-bottom: 0.5rem; color: var(--dark);">Cryptocurrency Payment Instructions</h4>
+                                
+                                <div class="form-group">
+                                    <label>Select Blockchain Network</label>
+                                    <select id="crypto-network" class="form-control" onchange="updateCryptoDetails()">
+                                        <option value="">Select network</option>
+                                        <option value="erc20">ERC-20 (Ethereum)</option>
+                                        <option value="bnb">BNB Chain</option>
+                                    </select>
+                                </div>
+
+                                <!-- ERC-20 Details -->
+                                <div id="erc20-details" style="display: none; padding: 1rem; background: rgba(255, 209, 102, 0.1); border-radius: 8px; margin-bottom: 1rem;">
+                                    <h5><i class="fab fa-ethereum"></i> ERC-20 Wallet Details:</h5>
+                                    <div style="word-break: break-all; background: rgba(0,0,0,0.05); padding: 0.8rem; border-radius: 8px; margin: 0.5rem 0;">
+                                        <strong>Wallet Address:</strong><br>
+                                        0x742d35Cc6634C0532925a3b844Bc9eE3a5C2f5e1
+                                    </div>
+                                    <p style="margin-top: 0.5rem; font-size: 0.9rem;">
+                                        <i class="fas fa-exclamation-triangle"></i> Send only ETH or ERC-20 tokens to this address
+                                    </p>
+                                    <p style="margin-top: 0.5rem; color: var(--warning);">
+                                        <i class="fas fa-exclamation-triangle"></i> Transactions require 12 network confirmations
+                                    </p>
+                                </div>
+
+                                <!-- BNB Chain Details -->
+                                <div id="bnb-details" style="display: none; padding: 1rem; background: rgba(255, 209, 102, 0.1); border-radius: 8px; margin-bottom: 1rem;">
+                                    <h5><i class="fab fa-btc"></i> BNB Chain Wallet Details:</h5>
+                                    <div style="word-break: break-all; background: rgba(0,0,0,0.05); padding: 0.8rem; border-radius: 8px; margin: 0.5rem 0;">
+                                        <strong>Wallet Address:</strong><br>
+                                        bnb1q7f4y8d3p2r5v6t9y0u1i2o3a4s5d6f7g8h9j0k
+                                    </div>
+                                    <p style="margin-top: 0.5rem; font-size: 0.9rem;">
+                                        <i class="fas fa-exclamation-triangle"></i> Send only BNB or BEP-20 tokens to this address
+                                    </p>
+                                    <p style="margin-top: 0.5rem; color: var(--warning);">
+                                        <i class="fas fa-exclamation-triangle"></i> Transactions require 15 network confirmations
+                                    </p>
+                                </div>
+
+                                <form id="crypto-deposit-form">
+                                    <div class="form-group">
+                                        <label for="tx-hash">Transaction Hash</label>
+                                        <input type="text" id="tx-hash" class="form-control" placeholder="Enter transaction hash from blockchain" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="crypto-amount">Amount Sent (in cryptocurrency)</label>
+                                        <input type="number" id="crypto-amount" class="form-control" placeholder="Enter amount sent" step="0.000001" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-block">
+                                        <i class="fas fa-check-circle"></i>
+                                        Submit Deposit Request
+                                    </button>
+                                </form>
                             </div>
-                            <button type="submit" class="btn btn-primary btn-block">
-                                <i class="fas fa-plus-circle"></i>
-                                Process Deposit
-                            </button>
-                        </form>
+                        </div>
                     </div>
                 </section>
 
@@ -2335,44 +2610,58 @@
                         <p>Withdraw your earnings to your preferred payment method</p>
                         <div class="conversion-notice">
                             <i class="fas fa-info-circle"></i>
-                            Enter amount in Chinese Yuan (¥). The system automatically converts to Ghana Cedis (GH₵) at a rate of 1¥ = 2 GH₵.
+                            Minimum withdrawal: $10 = ¥100 = GH₵200. Bonus account minimum: ¥100
                         </div>
                     </div>
 
                     <div class="kyc-form-container">
                         <h2 style="margin-bottom: 1.5rem; color: var(--dark);">Request Withdrawal</h2>
-                        <div id="withdraw-converter" class="currency-converter">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <div>
-                                    <strong>Conversion:</strong>
-                                    <div style="font-size: 0.9rem; color: var(--gray);">1 Chinese Yuan (¥) = 2 Ghana Cedis (GH₵)</div>
+                        
+                        <!-- Currency Converter -->
+                        <div class="currency-converter">
+                            <div class="form-group">
+                                <label>Currency Converter</label>
+                                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                                    <input type="number" id="withdraw-usd" class="form-control" placeholder="USD" oninput="convertWithdrawCurrency('usd')" step="1" min="10">
+                                    <input type="number" id="withdraw-cny" class="form-control" placeholder="CNY" oninput="convertWithdrawCurrency('cny')" step="100" min="100">
+                                    <input type="number" id="withdraw-ghs" class="form-control" placeholder="GHS" oninput="convertWithdrawCurrency('ghs')" step="200" min="200">
                                 </div>
-                                <div style="text-align: right;">
-                                    <div style="font-weight: bold;" id="withdraw-conversion-result">¥0 = GH₵0</div>
+                                <div style="text-align: center; font-size: 0.9rem; color: var(--gray);">
+                                    <div>Exchange Rate: $1 = ¥10 = GH₵20</div>
                                 </div>
                             </div>
                         </div>
+                        
                         <form id="withdraw-form">
                             <div class="form-group">
-                                <label for="withdraw-amount">Amount (¥ Chinese Yuan)</label>
-                                <input type="number" id="withdraw-amount" class="form-control" placeholder="Enter amount in Yuan" min="200" step="100" required oninput="showCurrencyConversion(this.value, 'withdraw')">
-                                <p style="margin-top: 0.5rem; color: var(--gray); font-size: 0.85rem;">Available balance: <span id="withdraw-balance">¥0.00</span> (≈ GH₵<span id="withdraw-balance-ghs">0.00</span>)</p>
-                                <p style="margin-top: 0.5rem; color: var(--gray); font-size: 0.85rem;">Minimum withdrawal: ¥200 (≈ GH₵400)</p>
+                                <label for="withdraw-account">Select Account</label>
+                                <select id="withdraw-account" class="form-control" required onchange="updateWithdrawLimits()">
+                                    <option value="">Select account</option>
+                                    <option value="current">Current Account</option>
+                                    <option value="bonus">Bonus Account</option>
+                                </select>
+                                <div style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--gray);">
+                                    <div>Current Account Balance: <span id="current-balance-display">¥0.00</span></div>
+                                    <div>Bonus Account Balance: <span id="bonus-balance-display">¥0.00</span></div>
+                                </div>
                             </div>
+                            
                             <div class="form-group">
                                 <label for="withdraw-method">Withdrawal Method</label>
                                 <select id="withdraw-method" class="form-control" required>
                                     <option value="">Select method</option>
                                     <option value="bank-transfer">Bank Transfer</option>
-                                    <option value="mobile-money">Mobile Money (Ghana)</option>
+                                    <option value="mobile-money">Mobile Money</option>
                                     <option value="crypto">Cryptocurrency</option>
                                 </select>
                             </div>
+                            
                             <div class="form-group">
                                 <label for="account-details">Account Details</label>
                                 <input type="text" id="account-details" class="form-control" placeholder="Enter account number or wallet address" required>
                             </div>
-                            <button type="submit" class="btn btn-primary btn-block">
+                            
+                            <button type="button" class="btn btn-primary btn-block" onclick="requestWithdrawal()">
                                 <i class="fas fa-paper-plane"></i>
                                 Request Withdrawal
                             </button>
@@ -2550,7 +2839,7 @@
                         <h2 style="margin-bottom: 1.5rem; color: var(--dark);">Your Referral Link</h2>
                         <div class="form-group">
                             <div style="display: flex; gap: 8px; margin-bottom: 1.2rem;">
-                                <input type="text" id="referral-link" class="form-control" value="https://macsun-energies.com/ref/USER123" readonly>
+                                <input type="text" id="referral-link" class="form-control" value="https://macsun-energies.site/ref/USER123" readonly>
                                 <button type="button" class="btn btn-primary" onclick="copyReferralLink()" style="width: auto; padding: 0 15px;">
                                     <i class="fas fa-copy"></i>
                                 </button>
@@ -2562,9 +2851,74 @@
                                 <li>Share your referral link with friends</li>
                                 <li>Earn 10% commission on their first investment</li>
                                 <li>Earn 5% commission on their subsequent investments</li>
-                                <li>Commission paid directly to your account balance</li>
+                                <li>Commission paid to your bonus account</li>
                             </ul>
                         </div>
+                    </div>
+                </section>
+
+                <!-- Download Section -->
+                <section id="download" class="section">
+                    <div class="welcome-message">
+                        <h1>Download Our App</h1>
+                        <p>Get the best experience on your mobile device or desktop</p>
+                    </div>
+
+                    <div class="download-grid">
+                        <div class="download-card" onclick="downloadApp('android')">
+                            <div class="download-icon">
+                                <i class="fab fa-android"></i>
+                            </div>
+                            <h3>Android App</h3>
+                            <p>Download for Android smartphones and tablets</p>
+                            <button class="btn btn-primary" style="margin-top: 1rem;">
+                                <i class="fas fa-download"></i> Download APK
+                            </button>
+                        </div>
+
+                        <div class="download-card" onclick="downloadApp('iphone')">
+                            <div class="download-icon">
+                                <i class="fab fa-apple"></i>
+                            </div>
+                            <h3>iPhone App</h3>
+                            <p>Download for iOS devices (iPhone & iPad)</p>
+                            <button class="btn btn-primary" style="margin-top: 1rem;">
+                                <i class="fas fa-download"></i> App Store
+                            </button>
+                        </div>
+
+                        <div class="download-card" onclick="downloadApp('desktop')">
+                            <div class="download-icon">
+                                <i class="fas fa-desktop"></i>
+                            </div>
+                            <h3>Desktop App</h3>
+                            <p>Download for Windows, Mac, and Linux</p>
+                            <button class="btn btn-primary" style="margin-top: 1rem;">
+                                <i class="fas fa-download"></i> Download
+                            </button>
+                        </div>
+
+                        <div class="download-card" onclick="downloadApp('web')">
+                            <div class="download-icon">
+                                <i class="fas fa-globe"></i>
+                            </div>
+                            <h3>Web Version</h3>
+                            <p>Access directly from your browser</p>
+                            <button class="btn btn-primary" style="margin-top: 1rem;">
+                                <i class="fas fa-external-link-alt"></i> Open Web App
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="kyc-form-container" style="margin-top: 2rem;">
+                        <h3 style="margin-bottom: 1rem;">App Features</h3>
+                        <ul style="color: var(--gray); margin-left: 1.2rem;">
+                            <li>Real-time investment tracking</li>
+                            <li>Push notifications for earnings</li>
+                            <li>Quick deposit and withdrawal</li>
+                            <li>Secure biometric login</li>
+                            <li>Offline access to your portfolio</li>
+                        </ul>
                     </div>
                 </section>
 
@@ -2634,38 +2988,37 @@
                     </div>
                 </section>
 
-                <!-- Chat Admin Section (Renamed from Support) -->
+                <!-- Chat Admin Section -->
                 <section id="chat-admin" class="section">
                     <div class="welcome-message">
                         <h1>Chat with Admin</h1>
-                        <p>Get instant help from our support team</p>
+                        <p>Get instant help from our support team via WhatsApp</p>
                     </div>
                     <div class="kyc-form-container">
-                        <h2 style="margin-bottom: 1.5rem; color: var(--dark);">Contact Admin Directly</h2>
+                        <h2 style="margin-bottom: 1.5rem; color: var(--dark);">Contact Admin Directly on WhatsApp</h2>
                         
-                        <div style="background: linear-gradient(135deg, var(--primary-light), var(--primary)); color: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; text-align: center;">
+                        <div style="background: linear-gradient(135deg, #25D366, #128C7E); color: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; text-align: center;">
                             <div style="font-size: 2rem; margin-bottom: 1rem;">
-                                <i class="fas fa-phone-alt"></i>
+                                <i class="fab fa-whatsapp"></i>
                             </div>
-                            <h3 style="margin-bottom: 0.5rem;">Call or WhatsApp Admin</h3>
+                            <h3 style="margin-bottom: 0.5rem;">Chat on WhatsApp</h3>
                             <div style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem;">027 331 5392</div>
-                            <p style="opacity: 0.9; font-size: 0.9rem;">Available during working hours: Monday to Saturday, 9AM to 6PM</p>
+                            <p style="opacity: 0.9; font-size: 0.9rem;">Click the button below to open WhatsApp and start chatting</p>
                         </div>
                         
-                        <form id="support-form">
-                            <div class="form-group">
-                                <label for="support-subject">Subject</label>
-                                <input type="text" id="support-subject" class="form-control" placeholder="Brief description of your issue" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="support-message">Message</label>
-                                <textarea id="support-message" class="form-control" rows="5" placeholder="Describe your issue in detail" required></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-primary btn-block">
-                                <i class="fas fa-paper-plane"></i>
-                                Send Message to Admin
-                            </button>
-                        </form>
+                        <button class="btn btn-success btn-block" onclick="openWhatsApp()" style="background: linear-gradient(135deg, #25D366, #128C7E);">
+                            <i class="fab fa-whatsapp"></i>
+                            Open WhatsApp to Chat with Admin
+                        </button>
+                        
+                        <div style="margin-top: 2rem; padding: 1rem; background: var(--light); border-radius: 10px;">
+                            <h4 style="margin-bottom: 0.5rem; color: var(--dark);">Alternative Contact Methods</h4>
+                            <ul style="color: var(--gray); margin-left: 1.2rem;">
+                                <li><strong>Email:</strong> support@macsun-energies.site</li>
+                                <li><strong>Telegram:</strong> @macsun_support</li>
+                                <li><strong>Working Hours:</strong> Monday to Saturday, 9AM to 6PM</li>
+                            </ul>
+                        </div>
                     </div>
                 </section>
 
@@ -2692,6 +3045,10 @@
                             <div class="form-group">
                                 <label for="settings-password">New Password</label>
                                 <input type="password" id="settings-password" class="form-control" placeholder="Leave blank to keep current">
+                            </div>
+                            <div class="form-group">
+                                <label for="settings-withdraw-password">Withdrawal Password</label>
+                                <input type="password" id="settings-withdraw-password" class="form-control" placeholder="Change 4-digit withdrawal password">
                             </div>
                             <button type="submit" class="btn btn-primary btn-block">
                                 <i class="fas fa-save"></i>
@@ -2723,7 +3080,10 @@
         let currentUser = null;
         let userData = null;
         let currentKycStep = 1;
-        const CNY_TO_GHS_RATE = 2; // 1 Chinese Yuan = 2 Ghana Cedis
+        const USD_TO_CNY_RATE = 10;
+        const CNY_TO_GHS_RATE = 2;
+        const USD_TO_GHS_RATE = 20;
+        let pendingWithdrawalData = null;
 
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
@@ -2798,7 +3158,7 @@
             });
 
             // Forms
-            const forms = ['deposit-form', 'withdraw-form', 'support-form', 'settings-form'];
+            const forms = ['momo-deposit-form', 'crypto-deposit-form', 'settings-form', 'withdraw-password-form'];
             forms.forEach(formId => {
                 const form = document.getElementById(formId);
                 if (form) {
@@ -2812,28 +3172,25 @@
             // KYC buttons
             document.getElementById('kyc-verification-btn')?.addEventListener('click', () => switchSection('kyc'));
             document.getElementById('verify-email-btn')?.addEventListener('click', verifyEmail);
-            document.getElementById('change-password')?.addEventListener('click', changePassword);
+            document.getElementById('download-app-btn')?.addEventListener('click', () => switchSection('download'));
             document.getElementById('profile-signout')?.addEventListener('click', signOutUser);
+
+            // Modal close
+            document.getElementById('close-withdraw-modal')?.addEventListener('click', function() {
+                document.getElementById('withdraw-password-modal').style.display = 'none';
+            });
+
+            // Close modal when clicking outside
+            window.addEventListener('click', function(e) {
+                const modal = document.getElementById('withdraw-password-modal');
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
 
             // Initialize platform status
             updatePlatformStatus();
             setInterval(updatePlatformStatus, 60000);
-            
-            // Set up deposit amount listener for conversion
-            const depositAmountInput = document.getElementById('deposit-amount');
-            if (depositAmountInput) {
-                depositAmountInput.addEventListener('focus', function() {
-                    document.getElementById('deposit-converter').style.display = 'block';
-                });
-            }
-            
-            // Set up withdraw amount listener for conversion
-            const withdrawAmountInput = document.getElementById('withdraw-amount');
-            if (withdrawAmountInput) {
-                withdrawAmountInput.addEventListener('focus', function() {
-                    document.getElementById('withdraw-converter').style.display = 'block';
-                });
-            }
         }
 
         function switchSection(sectionId) {
@@ -2852,31 +3209,96 @@
                 case 'my-investments':
                     loadMyInvestments();
                     break;
+                case 'withdraw':
+                    updateWithdrawBalances();
+                    break;
             }
         }
 
         // Currency conversion functions
-        function showCurrencyConversion(yuanAmount, type) {
-            if (!yuanAmount || yuanAmount < 0) {
-                yuanAmount = 0;
+        function convertCurrency(from) {
+            let usd = parseFloat(document.getElementById('usd-amount').value) || 0;
+            let cny = parseFloat(document.getElementById('cny-amount').value) || 0;
+            let ghs = parseFloat(document.getElementById('ghs-amount').value) || 0;
+            
+            if (from === 'usd' && usd > 0) {
+                cny = usd * USD_TO_CNY_RATE;
+                ghs = usd * USD_TO_GHS_RATE;
+            } else if (from === 'cny' && cny > 0) {
+                usd = cny / USD_TO_CNY_RATE;
+                ghs = cny * CNY_TO_GHS_RATE;
+            } else if (from === 'ghs' && ghs > 0) {
+                usd = ghs / USD_TO_GHS_RATE;
+                cny = ghs / CNY_TO_GHS_RATE;
             }
             
-            const ghsAmount = yuanAmount * CNY_TO_GHS_RATE;
+            document.getElementById('usd-amount').value = usd.toFixed(2);
+            document.getElementById('cny-amount').value = cny.toFixed(2);
+            document.getElementById('ghs-amount').value = ghs.toFixed(2);
             
-            if (type === 'deposit') {
-                document.getElementById('conversion-result').textContent = `¥${yuanAmount} = GH₵${ghsAmount.toFixed(2)}`;
-            } else if (type === 'withdraw') {
-                document.getElementById('withdraw-conversion-result').textContent = `¥${yuanAmount} = GH₵${ghsAmount.toFixed(2)}`;
+            // Update mobile money displays
+            document.getElementById('mtn-amount-display').textContent = '¥' + cny.toFixed(2);
+            document.getElementById('telecel-amount-display').textContent = '¥' + cny.toFixed(2);
+        }
+
+        function convertWithdrawCurrency(from) {
+            let usd = parseFloat(document.getElementById('withdraw-usd').value) || 0;
+            let cny = parseFloat(document.getElementById('withdraw-cny').value) || 0;
+            let ghs = parseFloat(document.getElementById('withdraw-ghs').value) || 0;
+            
+            if (from === 'usd' && usd > 0) {
+                cny = usd * USD_TO_CNY_RATE;
+                ghs = usd * USD_TO_GHS_RATE;
+            } else if (from === 'cny' && cny > 0) {
+                usd = cny / USD_TO_CNY_RATE;
+                ghs = cny * CNY_TO_GHS_RATE;
+            } else if (from === 'ghs' && ghs > 0) {
+                usd = ghs / USD_TO_GHS_RATE;
+                cny = ghs / CNY_TO_GHS_RATE;
+            }
+            
+            document.getElementById('withdraw-usd').value = usd.toFixed(2);
+            document.getElementById('withdraw-cny').value = cny.toFixed(2);
+            document.getElementById('withdraw-ghs').value = ghs.toFixed(2);
+        }
+
+        function selectPaymentMethod(method) {
+            document.getElementById('momo-instructions').style.display = 'none';
+            document.getElementById('crypto-instructions').style.display = 'none';
+            document.getElementById('select-momo').classList.remove('btn-primary');
+            document.getElementById('select-crypto').classList.remove('btn-primary');
+            
+            if (method === 'momo') {
+                document.getElementById('momo-instructions').style.display = 'block';
+                document.getElementById('select-momo').classList.add('btn-primary');
+            } else if (method === 'crypto') {
+                document.getElementById('crypto-instructions').style.display = 'block';
+                document.getElementById('select-crypto').classList.add('btn-primary');
             }
         }
 
-        function formatCurrency(amount, currency = 'CNY') {
-            if (currency === 'CNY') {
-                return `¥${amount.toFixed(2)}`;
-            } else if (currency === 'GHS') {
-                return `GH₵${amount.toFixed(2)}`;
+        function updateMomoDetails() {
+            const network = document.getElementById('momo-network').value;
+            document.getElementById('mtn-details').style.display = 'none';
+            document.getElementById('telecel-details').style.display = 'none';
+            
+            if (network === 'mtn') {
+                document.getElementById('mtn-details').style.display = 'block';
+            } else if (network === 'telecel') {
+                document.getElementById('telecel-details').style.display = 'block';
             }
-            return `$${amount.toFixed(2)}`;
+        }
+
+        function updateCryptoDetails() {
+            const network = document.getElementById('crypto-network').value;
+            document.getElementById('erc20-details').style.display = 'none';
+            document.getElementById('bnb-details').style.display = 'none';
+            
+            if (network === 'erc20') {
+                document.getElementById('erc20-details').style.display = 'block';
+            } else if (network === 'bnb') {
+                document.getElementById('bnb-details').style.display = 'block';
+            }
         }
 
         async function initFirebaseAuth() {
@@ -2891,7 +3313,13 @@
                 const dashboardPage = document.getElementById('dashboard-page');
                 
                 if (user) {
-                    // User is signed in
+                    // User is signed in - check email verification
+                    if (!user.emailVerified) {
+                        showAuthMessage('Please verify your email address before logging in.', 'error');
+                        await window.signOut(window.auth);
+                        return;
+                    }
+                    
                     currentUser = user;
                     loginPage.style.display = 'none';
                     dashboardPage.style.display = 'flex';
@@ -2900,7 +3328,7 @@
                     await loadUserData();
                     updateUIWithUserData();
                     
-                    // Check email verification
+                    // Update email verification status
                     updateEmailVerificationStatus();
                     
                 } else {
@@ -2982,11 +3410,21 @@
             loginBtn.disabled = true;
 
             try {
-                await window.signInWithEmailAndPassword(window.auth, email, password);
+                const userCredential = await window.signInWithEmailAndPassword(window.auth, email, password);
+                
+                // Check if email is verified
+                if (!userCredential.user.emailVerified) {
+                    await window.signOut(window.auth);
+                    throw new Error('EMAIL_NOT_VERIFIED');
+                }
+                
                 showAuthMessage('Successfully signed in!', 'success');
             } catch (error) {
                 let errorMessage = 'An error occurred during sign in.';
-                switch (error.code) {
+                switch (error.message) {
+                    case 'EMAIL_NOT_VERIFIED':
+                        errorMessage = 'Please verify your email address before logging in. Check your inbox for verification email.';
+                        break;
                     case 'auth/user-not-found':
                     case 'auth/wrong-password':
                         errorMessage = 'Invalid email or password.';
@@ -3010,6 +3448,7 @@
             const phone = document.getElementById('signup-phone').value;
             const password = document.getElementById('signup-password').value;
             const confirmPassword = document.getElementById('signup-confirm-password').value;
+            const withdrawPassword = document.getElementById('signup-withdraw-password').value;
             const country = document.getElementById('signup-country').value;
             const signupBtn = document.getElementById('signup-btn');
 
@@ -3022,6 +3461,10 @@
                 showAuthMessage('Password must be at least 8 characters.', 'error', 'signup');
                 return;
             }
+            if (withdrawPassword.length < 4) {
+                showAuthMessage('Withdrawal password must be at least 4 digits.', 'error', 'signup');
+                return;
+            }
 
             // Show loading
             const originalText = signupBtn.innerHTML;
@@ -3032,33 +3475,41 @@
                 // Create user with email/password
                 const userCredential = await window.createUserWithEmailAndPassword(window.auth, email, password);
                 
+                // Generate unique UID for user (using Firebase UID as base)
+                const uid = userCredential.user.uid;
+                const userUid = 'MACSUN-' + uid.substring(0, 8).toUpperCase();
+                
                 // Create user document in Firestore
-                await createUserDocument(userCredential.user.uid, {
+                await createUserDocument(uid, {
+                    uid: userUid,
                     name: name,
                     email: email,
                     phone: phone,
                     country: country,
                     createdAt: new Date().toISOString(),
-                    balance: 0,
-                    balanceGHS: 0,
+                    currentAccount: 0,
+                    bonusAccount: 0,
                     kycStatus: 'not_verified',
                     referralCode: generateReferralCode(),
                     level: 'basic',
-                    currency: 'CNY'
+                    withdrawPassword: withdrawPassword,
+                    emailVerified: false,
+                    totalInvested: 0,
+                    totalEarned: 0
                 });
 
                 // Send verification email
                 await window.sendEmailVerification(userCredential.user);
                 
-                showAuthMessage('Account created! Please check your email for verification.', 'success', 'signup');
+                showAuthMessage('Account created! Please check your email for verification. You must verify your email before logging in.', 'success', 'signup');
                 
-                // Auto-switch to login after 3 seconds
+                // Auto-switch to login after 5 seconds
                 setTimeout(() => {
                     document.getElementById('signup-card').style.display = 'none';
                     document.getElementById('login-card').style.display = 'block';
                     clearAuthMessages();
                     document.getElementById('login-email').value = email;
-                }, 3000);
+                }, 5000);
                 
             } catch (error) {
                 let errorMessage = 'An error occurred during sign up.';
@@ -3088,19 +3539,26 @@
                 const userDoc = await window.firestore.getDoc(window.firestore.doc(window.db, 'users', user.uid));
                 
                 if (!userDoc.exists()) {
+                    // Generate unique UID for user
+                    const userUid = 'MACSUN-' + user.uid.substring(0, 8).toUpperCase();
+                    
                     // Create new user document for Google sign-in
                     await createUserDocument(user.uid, {
+                        uid: userUid,
                         name: user.displayName || 'User',
                         email: user.email,
                         phone: '',
                         country: '',
                         createdAt: new Date().toISOString(),
-                        balance: 0,
-                        balanceGHS: 0,
+                        currentAccount: 0,
+                        bonusAccount: 0,
                         kycStatus: 'not_verified',
                         referralCode: generateReferralCode(),
                         level: 'basic',
-                        currency: 'CNY'
+                        withdrawPassword: '0000', // Default withdrawal password
+                        emailVerified: true, // Google accounts are considered verified
+                        totalInvested: 0,
+                        totalEarned: 0
                     });
                 }
                 
@@ -3119,7 +3577,6 @@
                     userId: uid,
                     type: 'account_creation',
                     amount: 0,
-                    amountGHS: 0,
                     currency: 'CNY',
                     status: 'completed',
                     description: 'Account created',
@@ -3161,6 +3618,7 @@
             document.getElementById('profile-avatar').textContent = userData.name.charAt(0).toUpperCase();
             document.getElementById('profile-name').textContent = userData.name;
             document.getElementById('profile-email').textContent = userData.email;
+            document.getElementById('uid-text').textContent = userData.uid || 'Loading...';
             document.getElementById('member-since').textContent = new Date(userData.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
             
             // Update KYC status
@@ -3179,22 +3637,20 @@
                 kycBadge.style.color = 'var(--danger)';
             }
             
-            // Update dashboard with CNY currency
+            // Update dashboard with both accounts
             document.getElementById('dashboard-welcome').textContent = `Welcome back, ${userData.name}!`;
-            document.getElementById('total-balance').textContent = `¥${userData.balance?.toFixed(2) || '0.00'}`;
+            document.getElementById('total-balance').textContent = `¥${userData.currentAccount?.toFixed(2) || '0.00'}`;
+            document.getElementById('bonus-balance').textContent = `¥${userData.bonusAccount?.toFixed(2) || '0.00'}`;
+            document.getElementById('current-account-balance').textContent = `¥${userData.currentAccount?.toFixed(2) || '0.00'}`;
+            document.getElementById('bonus-account-balance').textContent = `¥${userData.bonusAccount?.toFixed(2) || '0.00'}`;
             
             // Update settings form
             document.getElementById('settings-name').value = userData.name;
             document.getElementById('settings-phone').value = userData.phone || '';
             document.getElementById('settings-email').value = userData.email;
             
-            // Update referral link
-            document.getElementById('referral-link').value = `https://macsun-energies.com/ref/${userData.referralCode}`;
-            
-            // Update withdraw balance with both CNY and GHS
-            const balanceGHS = userData.balanceGHS || (userData.balance * CNY_TO_GHS_RATE) || 0;
-            document.getElementById('withdraw-balance').textContent = `¥${userData.balance?.toFixed(2) || '0.00'}`;
-            document.getElementById('withdraw-balance-ghs').textContent = balanceGHS.toFixed(2);
+            // Update referral link with .site domain
+            document.getElementById('referral-link').value = `https://macsun-energies.site/ref/${userData.referralCode}`;
             
             // Load additional data
             loadDashboardData();
@@ -3236,7 +3692,7 @@
                     `;
                 } else {
                     recentTransactions.slice(0, 5).forEach(transaction => {
-                        const amountDisplay = transaction.currency === 'CNY' ? `¥${transaction.amount.toFixed(2)}` : `$${transaction.amount.toFixed(2)}`;
+                        const amountDisplay = `¥${transaction.amount.toFixed(2)}`;
                         const row = document.createElement('tr');
                         row.innerHTML = `
                             <td>${new Date(transaction.timestamp).toLocaleDateString()}</td>
@@ -3248,6 +3704,17 @@
                         tbody.appendChild(row);
                     });
                 }
+                
+                // Load active investments count
+                const investmentsQuery = window.firestore.query(
+                    window.firestore.collection(window.db, 'investments'),
+                    window.firestore.where('userId', '==', currentUser.uid),
+                    window.firestore.where('status', '==', 'active')
+                );
+                
+                const investmentsSnapshot = await window.firestore.getDocs(investmentsQuery);
+                document.getElementById('active-investments').textContent = investmentsSnapshot.size;
+                document.getElementById('active-plans-count').textContent = investmentsSnapshot.size;
                 
             } catch (error) {
                 console.error('Error loading dashboard data:', error);
@@ -3288,7 +3755,7 @@
                     `;
                 } else {
                     transactions.forEach(transaction => {
-                        const amountDisplay = transaction.currency === 'CNY' ? `¥${transaction.amount.toFixed(2)}` : `$${transaction.amount.toFixed(2)}`;
+                        const amountDisplay = `¥${transaction.amount.toFixed(2)}`;
                         const row = document.createElement('tr');
                         row.innerHTML = `
                             <td>${new Date(transaction.timestamp).toLocaleString()}</td>
@@ -3321,7 +3788,7 @@
                 const investments = [];
                 
                 investmentsSnapshot.forEach(doc => {
-                    investments.push(doc.data());
+                    investments.push({id: doc.id, ...doc.data()});
                 });
                 
                 // Update investments table
@@ -3329,6 +3796,7 @@
                 tbody.innerHTML = '';
                 
                 if (investments.length === 0) {
+                    document.getElementById('investment-visual').style.display = 'none';
                     tbody.innerHTML = `
                         <tr>
                             <td colspan="7" style="text-align: center; padding: 3rem; color: var(--gray);">
@@ -3338,17 +3806,30 @@
                         </tr>
                     `;
                 } else {
+                    document.getElementById('investment-visual').style.display = 'block';
+                    
+                    // Update visual with first investment
+                    if (investments[0]) {
+                        const investment = investments[0];
+                        const dailyEarnings = (investment.amount * (investment.dailyReturn / 100)).toFixed(2);
+                        document.getElementById('visual-plan-name').textContent = investment.packageName;
+                        document.getElementById('visual-plan-details').textContent = `¥${investment.amount} • ${investment.dailyReturn}% daily`;
+                        document.getElementById('visual-plan-earnings').textContent = `¥${dailyEarnings}/day`;
+                    }
+                    
                     investments.forEach(investment => {
                         const daysPassed = Math.floor((new Date() - new Date(investment.startDate)) / (1000 * 60 * 60 * 24));
                         const totalEarned = investment.amount * (investment.dailyReturn / 100) * Math.min(daysPassed, 60);
+                        const dailyEarnings = investment.amount * (investment.dailyReturn / 100);
                         
                         const row = document.createElement('tr');
+                        row.className = 'rotating-investment';
                         row.innerHTML = `
                             <td>${investment.packageName}</td>
                             <td>¥${investment.amount.toFixed(2)}</td>
                             <td>${new Date(investment.startDate).toLocaleDateString()}</td>
                             <td>${new Date(investment.endDate).toLocaleDateString()}</td>
-                            <td>¥${(investment.amount * (investment.dailyReturn / 100)).toFixed(2)}</td>
+                            <td>¥${dailyEarnings.toFixed(2)}</td>
                             <td>¥${totalEarned.toFixed(2)}</td>
                             <td><span class="status-badge status-completed">Active</span></td>
                         `;
@@ -3366,35 +3847,44 @@
 
         async function handleFormSubmit(formId) {
             switch(formId) {
-                case 'deposit-form':
-                    await handleDeposit();
+                case 'momo-deposit-form':
+                    await handleMomoDeposit();
                     break;
-                case 'withdraw-form':
-                    await handleWithdraw();
-                    break;
-                case 'support-form':
-                    await handleSupport();
+                case 'crypto-deposit-form':
+                    await handleCryptoDeposit();
                     break;
                 case 'settings-form':
                     await handleSettingsUpdate();
                     break;
+                case 'withdraw-password-form':
+                    await verifyWithdrawalPassword();
+                    break;
             }
         }
 
-        async function handleDeposit() {
-            const amount = parseFloat(document.getElementById('deposit-amount').value);
-            const method = document.getElementById('deposit-method').value;
-            const notes = document.getElementById('deposit-notes').value;
+        async function handleMomoDeposit() {
+            const network = document.getElementById('momo-network').value;
+            const transactionId = document.getElementById('transaction-id').value;
+            const amount = parseFloat(document.getElementById('momo-amount-confirm').value);
             
             if (!currentUser || !userData) return;
             
-            if (amount < 100) {
-                showToast('Minimum deposit is ¥100 (≈ GH₵200)', 'error');
+            if (!network) {
+                showToast('Please select a mobile money network', 'error');
                 return;
             }
             
-            // Calculate GHS equivalent
-            const amountGHS = amount * CNY_TO_GHS_RATE;
+            if (amount < 100) {
+                showToast('Minimum deposit is ¥100 ($10)', 'error');
+                return;
+            }
+            
+            // Check KYC status
+            if (userData.kycStatus !== 'verified') {
+                showToast('Please complete KYC verification before depositing', 'error');
+                switchSection('kyc');
+                return;
+            }
             
             try {
                 // Create transaction record
@@ -3402,18 +3892,25 @@
                     userId: currentUser.uid,
                     type: 'deposit',
                     amount: amount,
-                    amountGHS: amountGHS,
                     currency: 'CNY',
                     status: 'pending',
-                    method: method,
-                    description: `Deposit via ${method}` + (notes ? ` - ${notes}` : ''),
+                    method: `mobile_money_${network}`,
+                    description: `Deposit via ${network.toUpperCase()} Mobile Money`,
                     timestamp: new Date().toISOString(),
-                    reference: 'DEP-' + Date.now()
+                    reference: transactionId,
+                    details: {
+                        network: network,
+                        transactionId: transactionId,
+                        amount: amount
+                    }
                 });
                 
-                showToast(`Deposit request submitted for ¥${amount} (≈ GH₵${amountGHS})! It will be processed within 24 hours.`, 'success');
-                document.getElementById('deposit-form').reset();
-                document.getElementById('deposit-converter').style.display = 'none';
+                showToast(`Deposit request submitted for ¥${amount}! Transaction ID: ${transactionId}. Awaiting admin approval.`, 'success');
+                
+                // Reset form
+                document.getElementById('momo-deposit-form').reset();
+                document.getElementById('momo-instructions').style.display = 'none';
+                document.getElementById('select-momo').classList.remove('btn-primary');
                 
                 // Refresh data
                 loadDashboardData();
@@ -3423,74 +3920,177 @@
             }
         }
 
-        async function handleWithdraw() {
-            const amount = parseFloat(document.getElementById('withdraw-amount').value);
-            const method = document.getElementById('withdraw-method').value;
-            const accountDetails = document.getElementById('account-details').value;
+        async function handleCryptoDeposit() {
+            const network = document.getElementById('crypto-network').value;
+            const txHash = document.getElementById('tx-hash').value;
+            const amount = parseFloat(document.getElementById('crypto-amount').value);
             
             if (!currentUser || !userData) return;
             
-            if (amount < 200) {
-                showToast('Minimum withdrawal is ¥200 (≈ GH₵400)', 'error');
+            if (!network) {
+                showToast('Please select a blockchain network', 'error');
                 return;
             }
             
-            if (amount > userData.balance) {
-                showToast('Insufficient balance', 'error');
+            if (amount <= 0) {
+                showToast('Please enter valid amount', 'error');
                 return;
             }
             
-            // Calculate GHS equivalent
-            const amountGHS = amount * CNY_TO_GHS_RATE;
+            // Check KYC status
+            if (userData.kycStatus !== 'verified') {
+                showToast('Please complete KYC verification before depositing', 'error');
+                switchSection('kyc');
+                return;
+            }
             
             try {
                 // Create transaction record
                 await window.firestore.addDoc(window.firestore.collection(window.db, 'transactions'), {
                     userId: currentUser.uid,
-                    type: 'withdrawal',
+                    type: 'deposit',
                     amount: amount,
-                    amountGHS: amountGHS,
-                    currency: 'CNY',
+                    currency: 'CRYPTO',
                     status: 'pending',
-                    method: method,
-                    description: `Withdrawal to ${method}`,
+                    method: `crypto_${network}`,
+                    description: `Crypto deposit via ${network.toUpperCase()}`,
                     timestamp: new Date().toISOString(),
-                    reference: 'WTH-' + Date.now(),
-                    accountDetails: accountDetails
+                    reference: txHash,
+                    details: {
+                        network: network,
+                        txHash: txHash,
+                        amount: amount
+                    }
                 });
                 
-                showToast(`Withdrawal request submitted for ¥${amount} (≈ GH₵${amountGHS})! Processing time: 24-48 hours.`, 'success');
-                document.getElementById('withdraw-form').reset();
-                document.getElementById('withdraw-converter').style.display = 'none';
+                showToast(`Crypto deposit submitted! Transaction Hash: ${txHash.substring(0, 20)}... Awaiting confirmations.`, 'success');
+                
+                // Reset form
+                document.getElementById('crypto-deposit-form').reset();
+                document.getElementById('crypto-instructions').style.display = 'none';
+                document.getElementById('select-crypto').classList.remove('btn-primary');
                 
                 // Refresh data
                 loadDashboardData();
                 
             } catch (error) {
-                showToast('Error submitting withdrawal: ' + error.message, 'error');
+                showToast('Error submitting crypto deposit: ' + error.message, 'error');
             }
         }
 
-        async function handleSupport() {
-            const subject = document.getElementById('support-subject').value;
-            const message = document.getElementById('support-message').value;
+        function requestWithdrawal() {
+            const account = document.getElementById('withdraw-account').value;
+            const amountCny = parseFloat(document.getElementById('withdraw-cny').value) || 0;
+            const method = document.getElementById('withdraw-method').value;
+            const accountDetails = document.getElementById('account-details').value;
+            
+            if (!currentUser || !userData) return;
+            
+            if (!account || !amountCny || !method || !accountDetails) {
+                showToast('Please fill all required fields', 'error');
+                return;
+            }
+            
+            // Check KYC status
+            if (userData.kycStatus !== 'verified') {
+                showToast('Please complete KYC verification before withdrawing', 'error');
+                switchSection('kyc');
+                return;
+            }
+            
+            // Check minimum amounts
+            if (account === 'current' && amountCny < 100) {
+                showToast('Minimum withdrawal from current account is ¥100', 'error');
+                return;
+            }
+            
+            if (account === 'bonus' && amountCny < 100) {
+                showToast('Minimum withdrawal from bonus account is ¥100', 'error');
+                return;
+            }
+            
+            // Check balance
+            const balance = account === 'current' ? userData.currentAccount : userData.bonusAccount;
+            if (amountCny > balance) {
+                showToast('Insufficient balance', 'error');
+                return;
+            }
+            
+            // Store withdrawal data and show password modal
+            pendingWithdrawalData = {
+                account: account,
+                amountCny: amountCny,
+                method: method,
+                accountDetails: accountDetails,
+                amountUsd: (amountCny / USD_TO_CNY_RATE).toFixed(2),
+                amountGhs: (amountCny * CNY_TO_GHS_RATE).toFixed(2)
+            };
+            
+            document.getElementById('withdraw-password-modal').style.display = 'flex';
+            document.getElementById('withdraw-password-input').value = '';
+            document.getElementById('withdraw-password-input').focus();
+        }
+
+        async function verifyWithdrawalPassword() {
+            const password = document.getElementById('withdraw-password-input').value;
+            
+            if (!pendingWithdrawalData || !userData) {
+                showToast('Invalid withdrawal request', 'error');
+                return;
+            }
+            
+            if (password !== userData.withdrawPassword) {
+                showToast('Incorrect withdrawal password', 'error');
+                return;
+            }
             
             try {
-                // Create support ticket
-                await window.firestore.addDoc(window.firestore.collection(window.db, 'support_tickets'), {
+                // Update user balance
+                const updateData = {};
+                if (pendingWithdrawalData.account === 'current') {
+                    updateData.currentAccount = window.firestore.increment(-pendingWithdrawalData.amountCny);
+                } else {
+                    updateData.bonusAccount = window.firestore.increment(-pendingWithdrawalData.amountCny);
+                }
+                
+                await window.firestore.updateDoc(
+                    window.firestore.doc(window.db, 'users', currentUser.uid),
+                    updateData
+                );
+                
+                // Create transaction record
+                await window.firestore.addDoc(window.firestore.collection(window.db, 'transactions'), {
                     userId: currentUser.uid,
-                    subject: subject,
-                    message: message,
-                    status: 'open',
+                    type: 'withdrawal',
+                    amount: pendingWithdrawalData.amountCny,
+                    currency: 'CNY',
+                    status: 'pending',
+                    method: pendingWithdrawalData.method,
+                    description: `Withdrawal from ${pendingWithdrawalData.account} account`,
                     timestamp: new Date().toISOString(),
-                    ticketId: 'TKT-' + Date.now()
+                    reference: 'WTH-' + Date.now(),
+                    accountDetails: pendingWithdrawalData.accountDetails,
+                    details: {
+                        account: pendingWithdrawalData.account,
+                        amountUsd: pendingWithdrawalData.amountUsd,
+                        amountGhs: pendingWithdrawalData.amountGhs
+                    }
                 });
                 
-                showToast('Support ticket created successfully! We will respond within 24 hours.', 'success');
-                document.getElementById('support-form').reset();
+                showToast(`Withdrawal request submitted for ¥${pendingWithdrawalData.amountCny}! Processing time: 24-48 hours.`, 'success');
+                
+                // Close modal and reset form
+                document.getElementById('withdraw-password-modal').style.display = 'none';
+                document.getElementById('withdraw-form').reset();
+                pendingWithdrawalData = null;
+                
+                // Refresh user data
+                await loadUserData();
+                updateUIWithUserData();
+                loadDashboardData();
                 
             } catch (error) {
-                showToast('Error submitting support ticket: ' + error.message, 'error');
+                showToast('Error processing withdrawal: ' + error.message, 'error');
             }
         }
 
@@ -3498,17 +4098,30 @@
             const name = document.getElementById('settings-name').value;
             const phone = document.getElementById('settings-phone').value;
             const password = document.getElementById('settings-password').value;
+            const withdrawPassword = document.getElementById('settings-withdraw-password').value;
             
             try {
-                // Update user document
-                await window.firestore.updateDoc(window.firestore.doc(window.db, 'users', currentUser.uid), {
+                const updateData = {
                     name: name,
                     phone: phone
-                });
+                };
+                
+                if (withdrawPassword && withdrawPassword.length >= 4) {
+                    updateData.withdrawPassword = withdrawPassword;
+                }
+                
+                // Update user document
+                await window.firestore.updateDoc(
+                    window.firestore.doc(window.db, 'users', currentUser.uid),
+                    updateData
+                );
                 
                 // Update userData
                 userData.name = name;
                 userData.phone = phone;
+                if (withdrawPassword) {
+                    userData.withdrawPassword = withdrawPassword;
+                }
                 
                 // Update UI
                 updateUIWithUserData();
@@ -3693,17 +4306,6 @@
             }
         }
 
-        async function changePassword() {
-            if (!currentUser || !currentUser.email) return;
-            
-            try {
-                await window.sendPasswordResetEmail(window.auth, currentUser.email);
-                showToast('Password reset email sent! Check your inbox.', 'success');
-            } catch (error) {
-                showToast('Error sending password reset email: ' + error.message, 'error');
-            }
-        }
-
         async function signOutUser() {
             try {
                 await window.signOut(window.auth);
@@ -3728,20 +4330,18 @@
 
         function updatePlatformStatus() {
             const now = new Date();
-            const day = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+            const day = now.getDay();
             const hour = now.getHours();
             const minute = now.getMinutes();
             
             const statusIndicator = document.getElementById('status-indicator');
             const statusText = document.getElementById('platform-status-text');
             
-            // Check if within working hours: Monday to Saturday (1-6), 9AM to 6PM
-            const isWorkingDay = day >= 1 && day <= 6; // Monday to Saturday
+            const isWorkingDay = day >= 1 && day <= 6;
             const isWorkingHour = hour >= 9 && hour < 18;
             
             if (isWorkingDay && isWorkingHour) {
                 statusIndicator.className = 'status-indicator status-open';
-                // Calculate time until closing
                 const closeHour = 18;
                 const hoursLeft = closeHour - hour - (minute > 0 ? 1 : 0);
                 const minutesLeft = 60 - minute;
@@ -3749,17 +4349,16 @@
             } else {
                 statusIndicator.className = 'status-indicator status-closed';
                 
-                // Calculate time until next opening
                 let daysUntilOpen = 0;
                 let nextOpenHour = 9;
                 
-                if (day === 0) { // Sunday
-                    daysUntilOpen = 1; // Next Monday
-                } else if (day === 6 && hour >= 18) { // Saturday after 6PM
-                    daysUntilOpen = 2; // Next Monday
-                } else if (hour < 9) { // Before 9AM on a working day
+                if (day === 0) {
+                    daysUntilOpen = 1;
+                } else if (day === 6 && hour >= 18) {
+                    daysUntilOpen = 2;
+                } else if (hour < 9) {
                     nextOpenHour = 9;
-                } else if (hour >= 18) { // After 6PM on a working day
+                } else if (hour >= 18) {
                     daysUntilOpen = 1;
                     nextOpenHour = 9;
                 }
@@ -3787,7 +4386,7 @@
                 return;
             }
             
-            if (userData.balance < amount) {
+            if (userData.currentAccount < amount) {
                 showToast('Insufficient balance. Please deposit funds first.', 'error');
                 switchSection('deposit');
                 return;
@@ -3798,6 +4397,7 @@
                 const contractDays = 60;
                 const startDate = new Date();
                 const endDate = new Date(startDate.getTime() + contractDays * 24 * 60 * 60 * 1000);
+                const totalReturn = amount + (amount * (dailyReturn / 100) * contractDays);
                 
                 // Create investment record
                 await window.firestore.addDoc(window.firestore.collection(window.db, 'investments'), {
@@ -3809,35 +4409,42 @@
                     endDate: endDate.toISOString(),
                     status: 'active',
                     createdAt: new Date().toISOString(),
-                    currency: 'CNY'
+                    currency: 'CNY',
+                    totalReturn: totalReturn
                 });
                 
                 // Update user balance
-                const newBalance = userData.balance - amount;
-                const newBalanceGHS = newBalance * CNY_TO_GHS_RATE;
-                await window.firestore.updateDoc(window.firestore.doc(window.db, 'users', currentUser.uid), {
-                    balance: newBalance,
-                    balanceGHS: newBalanceGHS
-                });
+                await window.firestore.updateDoc(
+                    window.firestore.doc(window.db, 'users', currentUser.uid),
+                    {
+                        currentAccount: window.firestore.increment(-amount),
+                        totalInvested: window.firestore.increment(amount)
+                    }
+                );
                 
                 // Update userData
-                userData.balance = newBalance;
-                userData.balanceGHS = newBalanceGHS;
+                userData.currentAccount -= amount;
+                userData.totalInvested = (userData.totalInvested || 0) + amount;
                 
                 // Create transaction record
                 await window.firestore.addDoc(window.firestore.collection(window.db, 'transactions'), {
                     userId: currentUser.uid,
                     type: 'investment',
                     amount: amount,
-                    amountGHS: amount * CNY_TO_GHS_RATE,
                     currency: 'CNY',
                     status: 'completed',
-                    description: `Invested in ${packageName}`,
+                    description: `Invested in ${packageName} (${dailyReturn}% daily for 60 days)`,
                     timestamp: new Date().toISOString(),
-                    reference: 'INV-' + Date.now()
+                    reference: 'INV-' + Date.now(),
+                    details: {
+                        packageName: packageName,
+                        dailyReturn: dailyReturn,
+                        contractDays: contractDays,
+                        totalReturn: totalReturn
+                    }
                 });
                 
-                showToast(`Successfully invested ¥${amount} (≈ GH₵${(amount * CNY_TO_GHS_RATE).toFixed(2)}) in ${packageName}!`, 'success');
+                showToast(`Successfully invested ¥${amount} in ${packageName}! Daily earnings: ¥${(amount * dailyReturn / 100).toFixed(2)}`, 'success');
                 
                 // Refresh data
                 updateUIWithUserData();
@@ -3858,6 +4465,62 @@
             navigator.clipboard.writeText(link.value).then(() => {
                 showToast('Referral link copied to clipboard!', 'success');
             });
+        }
+
+        function openWhatsApp() {
+            const phone = '0273315392';
+            const message = 'Hello Macsun Energies Admin, I need assistance with my account.';
+            const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+            window.open(url, '_blank');
+        }
+
+        function downloadApp(type) {
+            let url = '';
+            let message = '';
+            
+            switch(type) {
+                case 'android':
+                    url = 'https://example.com/macsun-android.apk';
+                    message = 'Android app download started';
+                    break;
+                case 'iphone':
+                    url = 'https://apps.apple.com/app/macsun-energies/id123456789';
+                    message = 'Redirecting to App Store';
+                    break;
+                case 'desktop':
+                    url = 'https://example.com/macsun-desktop.exe';
+                    message = 'Desktop app download started';
+                    break;
+                case 'web':
+                    url = 'https://macsun-energies.site';
+                    message = 'Opening web application';
+                    break;
+            }
+            
+            showToast(message, 'success');
+            if (url) {
+                window.open(url, '_blank');
+            }
+        }
+
+        function updateWithdrawBalances() {
+            if (!userData) return;
+            
+            document.getElementById('current-balance-display').textContent = `¥${userData.currentAccount?.toFixed(2) || '0.00'}`;
+            document.getElementById('bonus-balance-display').textContent = `¥${userData.bonusAccount?.toFixed(2) || '0.00'}`;
+        }
+
+        function updateWithdrawLimits() {
+            const account = document.getElementById('withdraw-account').value;
+            const minAmount = document.getElementById('withdraw-cny');
+            
+            if (account === 'bonus') {
+                minAmount.min = 100;
+                minAmount.placeholder = 'Minimum: ¥100';
+            } else {
+                minAmount.min = 100;
+                minAmount.placeholder = 'Minimum: ¥100';
+            }
         }
 
         function showAuthMessage(message, type = 'error', formType = 'login') {
