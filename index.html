@@ -110,6 +110,8 @@
             line-height: 1.6;
             min-height: 100vh;
             transition: var(--transition);
+            overflow-x: hidden;
+            max-width: 100%;
         }
 
         body.dark-mode {
@@ -120,13 +122,15 @@
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            max-width: 100%;
+            overflow-x: hidden;
         }
 
         /* Header Styles */
         .header {
             background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
             color: white;
-            padding: 1rem 2rem;
+            padding: 1rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -135,12 +139,13 @@
             top: 0;
             z-index: 1000;
             border-bottom: 4px solid var(--accent);
+            width: 100%;
         }
 
         .header-left {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 15px;
         }
 
         .menu-toggle {
@@ -177,21 +182,21 @@
         .logo-container {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
         }
 
         .logo {
             display: flex;
             align-items: center;
-            gap: 12px;
-            font-size: 1.8rem;
+            gap: 10px;
+            font-size: 1.2rem;
             font-weight: 800;
             color: white;
         }
 
         .logo-icon {
-            width: 50px;
-            height: 50px;
+            width: 45px;
+            height: 45px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -199,7 +204,7 @@
             background: radial-gradient(circle, var(--accent) 0%, var(--primary) 100%);
             position: relative;
             overflow: hidden;
-            animation: sunGlow 3s ease-in-out infinite alternate;
+            animation: sunGlow 3s ease-in-out infinite alternate, rotateLogo 10s linear infinite;
             border: 3px solid white;
             box-shadow: 0 0 20px rgba(255, 209, 102, 0.5);
         }
@@ -213,9 +218,20 @@
             }
         }
 
-        .logo-icon i {
-            font-size: 24px;
-            color: var(--secondary);
+        @keyframes rotateLogo {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .logo-icon img {
+            width: 70%;
+            height: 70%;
+            object-fit: contain;
+            filter: brightness(0) invert(1);
         }
 
         .logo-text {
@@ -226,38 +242,41 @@
             font-weight: 800;
             letter-spacing: -0.5px;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            font-size: 1.2rem;
         }
 
         .logo-subtext {
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             opacity: 0.9;
             font-weight: 500;
             margin-left: 5px;
+            display: none;
         }
 
         .header-right {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 12px;
         }
 
         .platform-status {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             background: rgba(255, 255, 255, 0.15);
-            padding: 8px 16px;
-            border-radius: 25px;
-            font-size: 0.9rem;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
             font-weight: 600;
             color: white;
             border: 2px solid rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(10px);
+            white-space: nowrap;
         }
 
         .status-indicator {
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             animation: pulse 2s infinite;
         }
@@ -276,8 +295,8 @@
         }
 
         .theme-toggle {
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             background: rgba(255, 255, 255, 0.15);
             border-radius: 50%;
             display: flex;
@@ -287,6 +306,7 @@
             transition: var(--transition);
             border: 2px solid rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(10px);
+            flex-shrink: 0;
         }
 
         .theme-toggle:hover {
@@ -295,15 +315,15 @@
         }
 
         .theme-toggle i {
-            font-size: 1.2rem;
+            font-size: 1rem;
             color: white;
         }
 
         .notification {
             position: relative;
             cursor: pointer;
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             background: rgba(255, 255, 255, 0.15);
             border-radius: 50%;
             display: flex;
@@ -312,6 +332,7 @@
             border: 2px solid rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(10px);
             transition: var(--transition);
+            flex-shrink: 0;
         }
 
         .notification:hover {
@@ -320,19 +341,19 @@
         }
 
         .notification i {
-            font-size: 1.2rem;
+            font-size: 1rem;
             color: white;
         }
 
         .notification-badge {
             position: absolute;
-            top: 8px;
-            right: 8px;
+            top: 6px;
+            right: 6px;
             background: linear-gradient(135deg, var(--danger), #FF8FA3);
             color: white;
             border-radius: 50%;
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -350,14 +371,15 @@
         .user-info {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
             cursor: pointer;
-            padding: 8px 16px;
-            border-radius: 25px;
+            padding: 6px 12px;
+            border-radius: 20px;
             transition: var(--transition);
             background: rgba(255, 255, 255, 0.15);
             border: 2px solid rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(10px);
+            min-width: 0;
         }
 
         .user-info:hover {
@@ -366,8 +388,8 @@
         }
 
         .user-avatar {
-            width: 40px;
-            height: 40px;
+            width: 35px;
+            height: 35px;
             border-radius: 50%;
             background: linear-gradient(135deg, var(--accent), var(--primary));
             display: flex;
@@ -375,25 +397,27 @@
             justify-content: center;
             color: white;
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 0.9rem;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            flex-shrink: 0;
         }
 
         .user-name {
-            font-size: 0.95rem;
+            font-size: 0.85rem;
             font-weight: 600;
             color: white;
-            max-width: 150px;
+            max-width: 100px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            display: none;
         }
 
         .user-level {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             background: rgba(255, 255, 255, 0.2);
-            padding: 2px 8px;
-            border-radius: 12px;
+            padding: 2px 6px;
+            border-radius: 10px;
             font-weight: 600;
         }
 
@@ -404,7 +428,9 @@
             background: var(--card-bg);
             border-radius: var(--border-radius);
             box-shadow: var(--shadow-lg);
-            min-width: 320px;
+            min-width: 280px;
+            width: 90vw;
+            max-width: 320px;
             z-index: 1001;
             margin-top: 10px;
             opacity: 0;
@@ -422,15 +448,15 @@
         }
 
         .user-profile-header {
-            padding: 1.5rem;
+            padding: 1.2rem;
             background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
             text-align: center;
             position: relative;
         }
 
         .profile-avatar {
-            width: 60px;
-            height: 60px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             background: linear-gradient(135deg, var(--accent), var(--primary));
             display: flex;
@@ -445,14 +471,14 @@
 
         .profile-name {
             color: white;
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 700;
             margin-bottom: 4px;
         }
 
         .profile-email {
             color: rgba(255, 255, 255, 0.9);
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             margin-bottom: 8px;
         }
 
@@ -462,46 +488,46 @@
             gap: 5px;
             background: rgba(255, 255, 255, 0.2);
             color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.7rem;
             font-weight: 600;
             margin-top: 5px;
         }
 
         .user-profile-content {
-            padding: 1.5rem;
+            padding: 1.2rem;
         }
 
         .profile-info-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin-bottom: 20px;
+            gap: 12px;
+            margin-bottom: 15px;
         }
 
         .profile-info-item {
             background: var(--light);
-            padding: 12px;
+            padding: 10px;
             border-radius: 12px;
             text-align: center;
         }
 
         .profile-info-label {
             color: var(--gray);
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             margin-bottom: 5px;
             font-weight: 500;
         }
 
         .profile-info-value {
             color: var(--dark);
-            font-size: 1rem;
+            font-size: 0.9rem;
             font-weight: 700;
         }
 
         .profile-actions {
-            padding: 1rem 1.5rem;
+            padding: 1rem 1.2rem;
             border-top: 1px solid var(--light-gray);
             display: flex;
             flex-direction: column;
@@ -511,15 +537,15 @@
         .profile-action-btn {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 12px;
+            gap: 10px;
+            padding: 10px;
             border: none;
             background: transparent;
             color: var(--dark);
             cursor: pointer;
             transition: var(--transition);
-            border-radius: 12px;
-            font-size: 0.9rem;
+            border-radius: 10px;
+            font-size: 0.85rem;
             text-align: left;
         }
 
@@ -528,9 +554,9 @@
         }
 
         .profile-action-btn i {
-            width: 20px;
+            width: 18px;
             color: var(--primary);
-            font-size: 1rem;
+            font-size: 0.9rem;
         }
 
         /* Main Content */
@@ -538,7 +564,8 @@
             display: flex;
             flex: 1;
             position: relative;
-            min-height: calc(100vh - 80px);
+            min-height: calc(100vh - 70px);
+            width: 100%;
         }
 
         /* Sidebar */
@@ -551,10 +578,12 @@
             overflow-y: auto;
             border-right: 4px solid var(--accent);
             position: fixed;
-            top: 80px;
+            top: 70px;
             left: 0;
             bottom: 0;
             transform: translateX(-100%);
+            width: 280px;
+            max-width: 85%;
         }
 
         .sidebar.active {
@@ -563,20 +592,20 @@
 
         .menu {
             list-style: none;
-            padding: 2rem 0;
+            padding: 1.5rem 0;
             width: 100%;
         }
 
         .menu-item {
-            padding: 1rem 2rem;
+            padding: 0.9rem 1.5rem;
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
             cursor: pointer;
             transition: var(--transition);
             color: rgba(255, 255, 255, 0.85);
             white-space: nowrap;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             width: 100%;
             position: relative;
             overflow: hidden;
@@ -604,24 +633,26 @@
         }
 
         .menu-item i {
-            width: 24px;
+            width: 20px;
             text-align: center;
             flex-shrink: 0;
-            font-size: 1.1rem;
+            font-size: 1rem;
         }
 
         /* Content Area */
         .content {
             flex: 1;
-            padding: 2rem;
+            padding: 1.2rem;
             overflow-y: auto;
             transition: var(--transition);
             width: 100%;
+            max-width: 100%;
         }
 
         .section {
             display: none;
             animation: fadeIn 0.4s ease;
+            width: 100%;
         }
 
         .section.active {
@@ -635,11 +666,11 @@
 
         /* Dashboard Styles */
         .welcome-message {
-            margin-bottom: 2.5rem;
+            margin-bottom: 2rem;
         }
 
         .welcome-message h1 {
-            font-size: 2.5rem;
+            font-size: 1.8rem;
             font-weight: 800;
             color: var(--dark);
             margin-bottom: 0.5rem;
@@ -647,25 +678,26 @@
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
+            line-height: 1.3;
         }
 
         .welcome-message p {
             color: var(--gray);
-            font-size: 1.1rem;
-            max-width: 600px;
+            font-size: 0.95rem;
+            max-width: 100%;
         }
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
         }
 
         .stat-card {
             background: var(--card-bg);
             border-radius: var(--border-radius);
-            padding: 1.5rem;
+            padding: 1.2rem;
             box-shadow: var(--shadow);
             transition: var(--transition);
             border: 1px solid var(--light-gray);
@@ -680,25 +712,25 @@
 
         .stat-card h3 {
             color: var(--gray);
-            font-size: 0.9rem;
-            margin-bottom: 1rem;
+            font-size: 0.8rem;
+            margin-bottom: 0.8rem;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
         }
 
         .stat-card .value {
-            font-size: 2.2rem;
+            font-size: 1.5rem;
             font-weight: 800;
             color: var(--dark);
             margin-bottom: 0.5rem;
         }
 
         .stat-card .change {
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
             font-weight: 600;
         }
 
@@ -708,9 +740,9 @@
         /* Investment Packages */
         .packages-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 2rem;
-            margin-bottom: 3rem;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
         }
 
         .package-card {
@@ -735,99 +767,103 @@
             right: 1rem;
             background: linear-gradient(135deg, var(--accent), var(--primary));
             color: white;
-            padding: 6px 15px;
+            padding: 5px 12px;
             border-radius: 20px;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 700;
             z-index: 2;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         .package-header {
-            padding: 2rem;
+            padding: 1.5rem;
             background: linear-gradient(135deg, var(--secondary), #0056A3);
             text-align: center;
             position: relative;
         }
 
-        .package-icon {
-            width: 70px;
-            height: 70px;
-            background: rgba(255, 255, 255, 0.15);
+        .package-image {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1rem;
             border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            background: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 1rem;
         }
 
-        .package-icon i {
-            font-size: 1.8rem;
-            color: var(--accent);
+        .package-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .package-title {
             color: white;
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             font-weight: 700;
             margin-bottom: 0.5rem;
         }
 
         .package-subtitle {
             color: rgba(255, 255, 255, 0.9);
-            font-size: 0.95rem;
+            font-size: 0.9rem;
         }
 
         .package-content {
-            padding: 2rem;
+            padding: 1.5rem;
         }
 
         .package-features {
-            margin: 1.5rem 0;
+            margin: 1.2rem 0;
         }
 
         .package-feature {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 12px;
+            gap: 8px;
+            margin-bottom: 10px;
             color: var(--dark);
-            font-size: 0.95rem;
+            font-size: 0.9rem;
         }
 
         .package-feature i {
             color: var(--success);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         .package-price {
-            font-size: 2.5rem;
+            font-size: 1.8rem;
             font-weight: 800;
             color: var(--primary);
             text-align: center;
-            margin: 1.5rem 0;
+            margin: 1.2rem 0;
         }
 
         .package-price span {
-            font-size: 1rem;
+            font-size: 0.9rem;
             color: var(--gray);
             font-weight: 600;
         }
 
         .btn {
-            padding: 16px 32px;
+            padding: 14px 24px;
             border: none;
             border-radius: 12px;
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 700;
             cursor: pointer;
             transition: var(--transition);
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 8px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            width: 100%;
         }
 
         .btn-primary {
@@ -863,43 +899,49 @@
             border-radius: var(--border-radius);
             overflow: hidden;
             box-shadow: var(--shadow);
-            margin-top: 2rem;
+            margin-top: 1.5rem;
+            width: 100%;
+            overflow-x: auto;
         }
 
         .table-header {
             background: linear-gradient(135deg, var(--secondary), #0056A3);
-            padding: 1.5rem;
+            padding: 1.2rem;
             color: white;
         }
 
         .table-header h3 {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: 700;
         }
 
         .table-content {
             overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
+            min-width: 600px;
         }
 
         th {
-            padding: 1.5rem 1rem;
+            padding: 1rem 0.8rem;
             text-align: left;
             font-weight: 600;
             color: var(--gray);
             border-bottom: 1px solid var(--light-gray);
             background: var(--light);
+            font-size: 0.85rem;
         }
 
         td {
-            padding: 1.5rem 1rem;
+            padding: 1rem 0.8rem;
             border-bottom: 1px solid var(--light-gray);
             color: var(--dark);
             font-weight: 500;
+            font-size: 0.85rem;
         }
 
         tr:hover {
@@ -907,11 +949,12 @@
         }
 
         .status-badge {
-            padding: 6px 12px;
+            padding: 5px 10px;
             border-radius: 20px;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 700;
             text-transform: uppercase;
+            display: inline-block;
         }
 
         .status-completed { background: rgba(6, 214, 160, 0.1); color: var(--success); }
@@ -920,15 +963,17 @@
 
         /* KYC Verification */
         .kyc-container {
-            max-width: 800px;
+            max-width: 100%;
             margin: 0 auto;
         }
 
         .kyc-steps {
             display: flex;
             justify-content: space-between;
-            margin: 2rem 0;
+            margin: 1.5rem 0;
             position: relative;
+            flex-wrap: wrap;
+            gap: 15px;
         }
 
         .kyc-steps::before {
@@ -940,6 +985,7 @@
             height: 3px;
             background: var(--light-gray);
             z-index: 1;
+            display: none;
         }
 
         .kyc-step {
@@ -947,20 +993,22 @@
             z-index: 2;
             text-align: center;
             flex: 1;
+            min-width: 80px;
         }
 
         .step-circle {
-            width: 40px;
-            height: 40px;
+            width: 35px;
+            height: 35px;
             border-radius: 50%;
             background: var(--light-gray);
             color: var(--gray);
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 10px;
+            margin: 0 auto 8px;
             font-weight: 700;
             transition: var(--transition);
+            font-size: 0.9rem;
         }
 
         .kyc-step.active .step-circle {
@@ -975,7 +1023,7 @@
         }
 
         .step-label {
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             color: var(--gray);
             font-weight: 600;
         }
@@ -987,32 +1035,34 @@
         .kyc-form-container {
             background: var(--card-bg);
             border-radius: var(--border-radius);
-            padding: 2.5rem;
+            padding: 1.5rem;
             box-shadow: var(--shadow);
-            margin-top: 2rem;
+            margin-top: 1.5rem;
+            width: 100%;
         }
 
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.2rem;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 0.8rem;
+            margin-bottom: 0.6rem;
             font-weight: 600;
             color: var(--dark);
-            font-size: 0.95rem;
+            font-size: 0.9rem;
         }
 
         .form-control {
             width: 100%;
-            padding: 15px 20px;
+            padding: 12px 16px;
             border: 2px solid var(--light-gray);
-            border-radius: 12px;
-            font-size: 1rem;
+            border-radius: 10px;
+            font-size: 0.95rem;
             transition: var(--transition);
             background: var(--card-bg);
             color: var(--dark);
+            -webkit-appearance: none;
         }
 
         .form-control:focus {
@@ -1023,8 +1073,8 @@
 
         .file-upload {
             border: 2px dashed var(--light-gray);
-            border-radius: 12px;
-            padding: 2rem;
+            border-radius: 10px;
+            padding: 1.5rem;
             text-align: center;
             cursor: pointer;
             transition: var(--transition);
@@ -1036,19 +1086,20 @@
         }
 
         .file-upload i {
-            font-size: 3rem;
+            font-size: 2.5rem;
             color: var(--gray);
-            margin-bottom: 1rem;
+            margin-bottom: 0.8rem;
         }
 
         .file-upload p {
             color: var(--gray);
             margin-bottom: 0.5rem;
+            font-size: 0.9rem;
         }
 
         .file-upload small {
             color: var(--gray);
-            font-size: 0.85rem;
+            font-size: 0.8rem;
         }
 
         /* Login/Signup Styles */
@@ -1058,16 +1109,16 @@
             align-items: center;
             min-height: 100vh;
             background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
-            padding: 2rem;
+            padding: 1rem;
         }
 
         .login-card {
             background: var(--card-bg);
             border-radius: var(--border-radius);
-            padding: 3rem;
+            padding: 2rem;
             box-shadow: var(--shadow-lg);
             width: 100%;
-            max-width: 480px;
+            max-width: 450px;
             text-align: center;
             animation: slideUp 0.5s ease;
         }
@@ -1078,24 +1129,24 @@
         }
 
         .login-header {
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
         }
 
         .login-logo {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 15px;
+            gap: 12px;
             margin-bottom: 1rem;
         }
 
         .login-logo .logo-icon {
-            width: 60px;
-            height: 60px;
+            width: 50px;
+            height: 50px;
         }
 
         .login-title {
-            font-size: 2.5rem;
+            font-size: 2rem;
             font-weight: 800;
             background: linear-gradient(90deg, var(--primary), var(--accent));
             -webkit-background-clip: text;
@@ -1106,14 +1157,14 @@
 
         .login-subtitle {
             color: var(--gray);
-            font-size: 1.1rem;
+            font-size: 1rem;
         }
 
         .auth-message {
-            padding: 1rem;
-            border-radius: 12px;
-            margin-bottom: 1.5rem;
-            font-size: 0.9rem;
+            padding: 0.9rem;
+            border-radius: 10px;
+            margin-bottom: 1.2rem;
+            font-size: 0.85rem;
             display: none;
             animation: fadeIn 0.3s ease;
         }
@@ -1139,7 +1190,7 @@
         .divider {
             display: flex;
             align-items: center;
-            margin: 2rem 0;
+            margin: 1.5rem 0;
             color: var(--gray);
         }
 
@@ -1151,19 +1202,19 @@
         }
 
         .divider span {
-            padding: 0 1rem;
-            font-size: 0.9rem;
+            padding: 0 0.8rem;
+            font-size: 0.85rem;
         }
 
         .loading-spinner {
             display: inline-block;
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             border: 3px solid rgba(255,255,255,.3);
             border-radius: 50%;
             border-top-color: white;
             animation: spin 1s ease-in-out infinite;
-            margin-right: 10px;
+            margin-right: 8px;
         }
 
         @keyframes spin {
@@ -1192,21 +1243,24 @@
         /* Toast */
         .toast {
             position: fixed;
-            bottom: 30px;
-            right: 30px;
+            bottom: 20px;
+            right: 20px;
+            left: 20px;
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
-            padding: 1rem 1.5rem;
-            border-radius: 12px;
+            padding: 0.9rem 1.2rem;
+            border-radius: 10px;
             box-shadow: var(--shadow-lg);
             z-index: 1100;
             opacity: 0;
             transform: translateY(20px);
             transition: all 0.3s ease;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
+            max-width: 400px;
+            margin: 0 auto;
         }
 
         .toast.show {
@@ -1214,82 +1268,283 @@
             transform: translateY(0);
         }
 
-        /* Responsive */
-        @media (max-width: 1200px) {
-            .packages-grid {
-                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            }
+        /* About Section Styles */
+        .about-content {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            margin-top: 1.5rem;
         }
 
-        @media (max-width: 992px) {
-            .content {
-                padding: 1.5rem;
-            }
-            
-            .stats-grid {
-                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            }
-            
-            .platform-status {
-                display: none;
-            }
+        .about-header {
+            margin-bottom: 1.5rem;
         }
 
+        .about-header h2 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .about-description {
+            color: var(--gray);
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .blog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .blog-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .blog-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .blog-image {
+            width: 100%;
+            height: 180px;
+            overflow: hidden;
+        }
+
+        .blog-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .blog-card:hover .blog-image img {
+            transform: scale(1.05);
+        }
+
+        .blog-content {
+            padding: 1.2rem;
+        }
+
+        .blog-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .blog-text {
+            color: var(--gray);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .conversion-notice {
+            background: rgba(255, 209, 102, 0.1);
+            border-left: 4px solid var(--accent);
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+
+        .conversion-notice i {
+            color: var(--accent);
+            margin-right: 8px;
+        }
+
+        /* Currency Converter */
+        .currency-converter {
+            background: var(--light);
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+            border: 2px solid var(--primary-light);
+            display: none;
+        }
+
+        .currency-display {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px dashed var(--light-gray);
+        }
+
+        /* Mobile-specific adjustments */
         @media (max-width: 768px) {
             .header {
-                padding: 1rem;
+                padding: 0.8rem 1rem;
             }
             
             .logo-text {
-                font-size: 1.4rem;
+                font-size: 1.1rem;
             }
             
             .user-name {
                 display: none;
             }
             
+            .platform-status {
+                font-size: 0.75rem;
+                padding: 5px 10px;
+            }
+            
+            .content {
+                padding: 1rem;
+            }
+            
+            .welcome-message h1 {
+                font-size: 1.5rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.8rem;
+            }
+            
+            .stat-card {
+                padding: 1rem;
+            }
+            
+            .stat-card .value {
+                font-size: 1.3rem;
+            }
+            
             .packages-grid {
                 grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .package-card {
+                margin-bottom: 0.5rem;
+            }
+            
+            table {
+                font-size: 0.85rem;
+            }
+            
+            th, td {
+                padding: 0.8rem 0.5rem;
             }
             
             .kyc-steps {
                 flex-direction: column;
-                gap: 30px;
+                align-items: flex-start;
+                gap: 20px;
             }
             
             .kyc-steps::before {
                 display: none;
             }
             
+            .kyc-step {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                width: 100%;
+                text-align: left;
+            }
+            
+            .step-circle {
+                margin: 0;
+            }
+            
             .login-card {
-                padding: 2rem;
-            }
-        }
-
-        @media (max-width: 576px) {
-            .content {
-                padding: 1rem;
+                padding: 1.5rem;
             }
             
-            .welcome-message h1 {
-                font-size: 2rem;
-            }
-            
-            .stat-card .value {
+            .login-title {
                 font-size: 1.8rem;
             }
             
-            .table-content {
+            .btn {
+                padding: 12px 20px;
                 font-size: 0.9rem;
             }
             
-            th, td {
-                padding: 1rem 0.5rem;
+            .user-profile-dropdown {
+                width: 95vw;
+                right: -10px;
             }
             
-            .user-profile-dropdown {
-                min-width: 280px;
-                right: -20px;
+            .blog-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-right {
+                gap: 8px;
+            }
+            
+            .platform-status {
+                display: none;
+            }
+            
+            .theme-toggle,
+            .notification {
+                width: 35px;
+                height: 35px;
+            }
+            
+            .user-avatar {
+                width: 30px;
+                height: 30px;
+                font-size: 0.8rem;
+            }
+            
+            .logo {
+                font-size: 1rem;
+            }
+            
+            .logo-icon {
+                width: 40px;
+                height: 40px;
+            }
+            
+            .welcome-message h1 {
+                font-size: 1.3rem;
+            }
+            
+            .package-header {
+                padding: 1.2rem;
+            }
+            
+            .package-title {
+                font-size: 1.2rem;
+            }
+        }
+
+        /* Landscape mode adjustments */
+        @media (max-height: 600px) and (orientation: landscape) {
+            .login-container {
+                padding: 1rem;
+            }
+            
+            .login-card {
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+        }
+
+        /* Prevent zoom on input focus for mobile */
+        @media (max-width: 768px) {
+            input, select, textarea {
+                font-size: 16px !important;
             }
         }
     </style>
@@ -1424,7 +1679,12 @@
                 <div class="logo-container">
                     <div class="logo">
                         <div class="logo-icon">
-                            <i class="fas fa-sun"></i>
+                            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="50" cy="50" r="45" fill="#FFD166"/>
+                                <circle cx="50" cy="50" r="35" fill="#FF6B35"/>
+                                <path d="M50 10 L50 90 M10 50 L90 50 M25 25 L75 75 M75 25 L25 75" stroke="#004E89" stroke-width="6" stroke-linecap="round"/>
+                                <circle cx="50" cy="50" r="15" fill="#004E89"/>
+                            </svg>
                         </div>
                         <span class="logo-text">MACSUN ENERGIES</span>
                         <span class="logo-subtext">Solar Investments</span>
@@ -1433,8 +1693,8 @@
             </div>
             <div class="header-right">
                 <div class="platform-status" id="platform-status">
-                    <div class="status-indicator status-open"></div>
-                    <span id="platform-status-text">Trading Active • 24/7</span>
+                    <div class="status-indicator status-open" id="status-indicator"></div>
+                    <span id="platform-status-text">Checking hours...</span>
                 </div>
                 <div class="theme-toggle" id="theme-toggle">
                     <i class="fas fa-moon"></i>
@@ -1465,7 +1725,7 @@
                             <div class="profile-info-grid">
                                 <div class="profile-info-item">
                                     <div class="profile-info-label">Account Balance</div>
-                                    <div class="profile-info-value">$0.00</div>
+                                    <div class="profile-info-value">¥0.00</div>
                                 </div>
                                 <div class="profile-info-item">
                                     <div class="profile-info-label">Active Investments</div>
@@ -1473,7 +1733,7 @@
                                 </div>
                                 <div class="profile-info-item">
                                     <div class="profile-info-label">Total Profit</div>
-                                    <div class="profile-info-value">$0.00</div>
+                                    <div class="profile-info-value">¥0.00</div>
                                 </div>
                                 <div class="profile-info-item">
                                     <div class="profile-info-label">Member Since</div>
@@ -1520,7 +1780,7 @@
                     </li>
                     <li class="menu-item" data-target="my-investments">
                         <i class="fas fa-chart-bar"></i>
-                        <span>My Investments</span>
+                        <span>My Earns</span>
                     </li>
                     <li class="menu-item" data-target="transactions">
                         <i class="fas fa-exchange-alt"></i>
@@ -1542,9 +1802,13 @@
                         <i class="fas fa-users"></i>
                         <span>Referral Program</span>
                     </li>
-                    <li class="menu-item" data-target="support">
+                    <li class="menu-item" data-target="about">
+                        <i class="fas fa-info-circle"></i>
+                        <span>About Us</span>
+                    </li>
+                    <li class="menu-item" data-target="chat-admin">
                         <i class="fas fa-headset"></i>
-                        <span>Support</span>
+                        <span>Chat Admin</span>
                     </li>
                     <li class="menu-item" data-target="settings">
                         <i class="fas fa-cog"></i>
@@ -1568,7 +1832,7 @@
                     <div class="stats-grid">
                         <div class="stat-card">
                             <h3>Total Balance</h3>
-                            <div class="value" id="total-balance">$0.00</div>
+                            <div class="value" id="total-balance">¥0.00</div>
                             <div class="change positive">
                                 <i class="fas fa-arrow-up"></i>
                                 <span>Ready to invest</span>
@@ -1583,14 +1847,14 @@
                         </div>
                         <div class="stat-card">
                             <h3>Daily Earnings</h3>
-                            <div class="value" id="daily-earnings">$0.00</div>
+                            <div class="value" id="daily-earnings">¥0.00</div>
                             <div class="change">
                                 <span>Will update after investment</span>
                             </div>
                         </div>
                         <div class="stat-card">
                             <h3>Total Returns</h3>
-                            <div class="value" id="total-returns">$0.00</div>
+                            <div class="value" id="total-returns">¥0.00</div>
                             <div class="change">
                                 <span>Your journey starts here</span>
                             </div>
@@ -1604,19 +1868,19 @@
                     <div class="stats-grid">
                         <div class="stat-card" style="cursor: pointer;" onclick="switchSection('deposit')">
                             <h3><i class="fas fa-plus-circle"></i> Deposit Funds</h3>
-                            <p style="color: var(--gray); margin-top: 10px;">Add funds to start investing in solar projects</p>
+                            <p style="color: var(--gray); margin-top: 10px; font-size: 0.85rem;">Add funds to start investing in solar projects</p>
                         </div>
                         <div class="stat-card" style="cursor: pointer;" onclick="switchSection('invest')">
                             <h3><i class="fas fa-solar-panel"></i> Start Investing</h3>
-                            <p style="color: var(--gray); margin-top: 10px;">Choose from our solar investment packages</p>
+                            <p style="color: var(--gray); margin-top: 10px; font-size: 0.85rem;">Choose from our solar investment packages</p>
                         </div>
                         <div class="stat-card" style="cursor: pointer;" onclick="switchSection('kyc')">
                             <h3><i class="fas fa-id-card"></i> Complete KYC</h3>
-                            <p style="color: var(--gray); margin-top: 10px;">Verify your identity to unlock full features</p>
+                            <p style="color: var(--gray); margin-top: 10px; font-size: 0.85rem;">Verify your identity to unlock full features</p>
                         </div>
                         <div class="stat-card" style="cursor: pointer;" onclick="switchSection('referral')">
                             <h3><i class="fas fa-users"></i> Invite Friends</h3>
-                            <p style="color: var(--gray); margin-top: 10px;">Earn rewards by referring friends</p>
+                            <p style="color: var(--gray); margin-top: 10px; font-size: 0.85rem;">Earn rewards by referring friends</p>
                         </div>
                     </div>
 
@@ -1657,32 +1921,36 @@
                     <div class="welcome-message">
                         <h1>Solar Investment Packages</h1>
                         <p>Choose from our carefully curated solar energy investment plans</p>
+                        <div class="conversion-notice">
+                            <i class="fas fa-info-circle"></i>
+                            All amounts are in Chinese Yuan (¥). The system automatically converts to Ghana Cedis (GH₵) at a rate of 1¥ = 2 GH₵.
+                        </div>
                     </div>
 
                     <div class="packages-grid">
-                        <!-- Starter Package -->
+                        <!-- Package 1: 100 Yuan -->
                         <div class="package-card">
                             <div class="package-badge">Beginner</div>
                             <div class="package-header">
-                                <div class="package-icon">
-                                    <i class="fas fa-home"></i>
+                                <div class="package-image">
+                                    <img src="https://images.unsplash.com/photo-1509391366360-2e959784a276?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTR8fHNvbGFyJTIwcGFuZWx8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=60" alt="Solar Panel">
                                 </div>
-                                <h3 class="package-title">Home Solar Starter</h3>
+                                <h3 class="package-title">Mini Solar Starter</h3>
                                 <p class="package-subtitle">Perfect for beginners</p>
                             </div>
                             <div class="package-content">
                                 <div class="package-features">
                                     <div class="package-feature">
                                         <i class="fas fa-check-circle"></i>
-                                        <span>Daily Return: 1.5%</span>
+                                        <span>Daily Return: 1.8%</span>
                                     </div>
                                     <div class="package-feature">
                                         <i class="fas fa-check-circle"></i>
-                                        <span>Contract Period: 30 days</span>
+                                        <span>Contract Period: 60 days</span>
                                     </div>
                                     <div class="package-feature">
                                         <i class="fas fa-check-circle"></i>
-                                        <span>Total Return: 45%</span>
+                                        <span>Total Return: 108%</span>
                                     </div>
                                     <div class="package-feature">
                                         <i class="fas fa-check-circle"></i>
@@ -1690,24 +1958,24 @@
                                     </div>
                                 </div>
                                 <div class="package-price">
-                                    $500 <span>Minimum</span>
+                                    ¥100 <span>≈ GH₵200</span>
                                 </div>
-                                <button class="btn btn-primary btn-block" onclick="investPackage('Home Solar Starter', 500)">
+                                <button class="btn btn-primary btn-block" onclick="investPackage('Mini Solar Starter', 100, 1.8)">
                                     <i class="fas fa-solar-panel"></i>
                                     Invest Now
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Advanced Package -->
+                        <!-- Package 2: 200 Yuan -->
                         <div class="package-card">
-                            <div class="package-badge">Popular</div>
+                            <div class="package-badge">Starter</div>
                             <div class="package-header">
-                                <div class="package-icon">
-                                    <i class="fas fa-building"></i>
+                                <div class="package-image">
+                                    <img src="https://images.unsplash.com/photo-1466611653911-95081537e5b7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fHNvbGFyJTIwZmFybXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60" alt="Solar Farm">
                                 </div>
-                                <h3 class="package-title">Commercial Solar Pro</h3>
-                                <p class="package-subtitle">For serious investors</p>
+                                <h3 class="package-title">Home Solar Basic</h3>
+                                <p class="package-subtitle">For home installations</p>
                             </div>
                             <div class="package-content">
                                 <div class="package-features">
@@ -1717,11 +1985,50 @@
                                     </div>
                                     <div class="package-feature">
                                         <i class="fas fa-check-circle"></i>
-                                        <span>Contract Period: 45 days</span>
+                                        <span>Contract Period: 60 days</span>
                                     </div>
                                     <div class="package-feature">
                                         <i class="fas fa-check-circle"></i>
-                                        <span>Total Return: 90%</span>
+                                        <span>Total Return: 120%</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Mobile App Access</span>
+                                    </div>
+                                </div>
+                                <div class="package-price">
+                                    ¥200 <span>≈ GH₵400</span>
+                                </div>
+                                <button class="btn btn-primary btn-block" onclick="investPackage('Home Solar Basic', 200, 2.0)">
+                                    <i class="fas fa-solar-panel"></i>
+                                    Invest Now
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Package 3: 300 Yuan -->
+                        <div class="package-card">
+                            <div class="package-badge">Popular</div>
+                            <div class="package-header">
+                                <div class="package-image">
+                                    <img src="https://images.unsplash.com/photo-1558449028-b53a39d10009?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTV8fHNvbGFyJTIwcm9vZnRvcHxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60" alt="Solar Rooftop">
+                                </div>
+                                <h3 class="package-title">Solar Rooftop Pro</h3>
+                                <p class="package-subtitle">Most popular choice</p>
+                            </div>
+                            <div class="package-content">
+                                <div class="package-features">
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Daily Return: 2.2%</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Contract Period: 60 days</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Total Return: 132%</span>
                                     </div>
                                     <div class="package-feature">
                                         <i class="fas fa-check-circle"></i>
@@ -1729,24 +2036,24 @@
                                     </div>
                                 </div>
                                 <div class="package-price">
-                                    $2,500 <span>Minimum</span>
+                                    ¥300 <span>≈ GH₵600</span>
                                 </div>
-                                <button class="btn btn-primary btn-block" onclick="investPackage('Commercial Solar Pro', 2500)">
+                                <button class="btn btn-primary btn-block" onclick="investPackage('Solar Rooftop Pro', 300, 2.2)">
                                     <i class="fas fa-solar-panel"></i>
                                     Invest Now
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Premium Package -->
+                        <!-- Package 4: 500 Yuan -->
                         <div class="package-card">
-                            <div class="package-badge">Premium</div>
+                            <div class="package-badge">Advanced</div>
                             <div class="package-header">
-                                <div class="package-icon">
-                                    <i class="fas fa-industry"></i>
+                                <div class="package-image">
+                                    <img src="https://images.unsplash.com/photo-1497440001374-f26997328c1b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTh8fHNvbGFyJTIwZmFybSUyMGxhcmdlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60" alt="Solar Farm Large">
                                 </div>
-                                <h3 class="package-title">Industrial Solar Plus</h3>
-                                <p class="package-subtitle">Maximum returns</p>
+                                <h3 class="package-title">Commercial Solar Plus</h3>
+                                <p class="package-subtitle">For business investments</p>
                             </div>
                             <div class="package-content">
                                 <div class="package-features">
@@ -1764,13 +2071,130 @@
                                     </div>
                                     <div class="package-feature">
                                         <i class="fas fa-check-circle"></i>
+                                        <span>Weekly Reports</span>
+                                    </div>
+                                </div>
+                                <div class="package-price">
+                                    ¥500 <span>≈ GH₵1000</span>
+                                </div>
+                                <button class="btn btn-primary btn-block" onclick="investPackage('Commercial Solar Plus', 500, 2.5)">
+                                    <i class="fas fa-solar-panel"></i>
+                                    Invest Now
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Package 5: 700 Yuan -->
+                        <div class="package-card">
+                            <div class="package-badge">Premium</div>
+                            <div class="package-header">
+                                <div class="package-image">
+                                    <img src="https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjB8fHNvbGFyJTIwcGFuZWwlMjBmYXJtfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60" alt="Solar Array">
+                                </div>
+                                <h3 class="package-title">Industrial Solar Array</h3>
+                                <p class="package-subtitle">High capacity investment</p>
+                            </div>
+                            <div class="package-content">
+                                <div class="package-features">
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Daily Return: 2.8%</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Contract Period: 60 days</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Total Return: 168%</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
                                         <span>Dedicated Manager</span>
                                     </div>
                                 </div>
                                 <div class="package-price">
-                                    $10,000 <span>Minimum</span>
+                                    ¥700 <span>≈ GH₵1400</span>
                                 </div>
-                                <button class="btn btn-primary btn-block" onclick="investPackage('Industrial Solar Plus', 10000)">
+                                <button class="btn btn-primary btn-block" onclick="investPackage('Industrial Solar Array', 700, 2.8)">
+                                    <i class="fas fa-solar-panel"></i>
+                                    Invest Now
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Package 6: 1000 Yuan -->
+                        <div class="package-card">
+                            <div class="package-badge">Elite</div>
+                            <div class="package-header">
+                                <div class="package-image">
+                                    <img src="https://images.unsplash.com/photo-1542332213-9b5a5a3f9854?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjN8fHNvbGFyJTIwcG93ZXIlMjBwbGFudHxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60" alt="Solar Power Plant">
+                                </div>
+                                <h3 class="package-title">Solar Power Plant</h3>
+                                <p class="package-subtitle">For serious investors</p>
+                            </div>
+                            <div class="package-content">
+                                <div class="package-features">
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Daily Return: 3.0%</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Contract Period: 60 days</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Total Return: 180%</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>VIP Support</span>
+                                    </div>
+                                </div>
+                                <div class="package-price">
+                                    ¥1000 <span>≈ GH₵2000</span>
+                                </div>
+                                <button class="btn btn-primary btn-block" onclick="investPackage('Solar Power Plant', 1000, 3.0)">
+                                    <i class="fas fa-solar-panel"></i>
+                                    Invest Now
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Package 7: 2000 Yuan -->
+                        <div class="package-card">
+                            <div class="package-badge">Ultimate</div>
+                            <div class="package-header">
+                                <div class="package-image">
+                                    <img src="https://images.unsplash.com/photo-1613665813446-82a78c468a1d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjZ8fHNvbGFyJTIwZ3JpZHxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60" alt="Solar Grid">
+                                </div>
+                                <h3 class="package-title">Solar Grid Master</h3>
+                                <p class="package-subtitle">Maximum returns</p>
+                            </div>
+                            <div class="package-content">
+                                <div class="package-features">
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Daily Return: 3.5%</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Contract Period: 60 days</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Total Return: 210%</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Executive Concierge</span>
+                                    </div>
+                                </div>
+                                <div class="package-price">
+                                    ¥2000 <span>≈ GH₵4000</span>
+                                </div>
+                                <button class="btn btn-primary btn-block" onclick="investPackage('Solar Grid Master', 2000, 3.5)">
                                     <i class="fas fa-solar-panel"></i>
                                     Invest Now
                                 </button>
@@ -1779,10 +2203,10 @@
                     </div>
                 </section>
 
-                <!-- My Investments Section -->
+                <!-- My Investments Section (Renamed to My Earns) -->
                 <section id="my-investments" class="section">
                     <div class="welcome-message">
-                        <h1>My Investments</h1>
+                        <h1>My Earns</h1>
                         <p>Track your active solar investments and their performance</p>
                     </div>
 
@@ -1857,24 +2281,39 @@
                     <div class="welcome-message">
                         <h1>Deposit Funds</h1>
                         <p>Add funds to your account to start investing</p>
+                        <div class="conversion-notice">
+                            <i class="fas fa-info-circle"></i>
+                            Enter amount in Chinese Yuan (¥). The system automatically converts to Ghana Cedis (GH₵) at a rate of 1¥ = 2 GH₵.
+                        </div>
                     </div>
 
                     <div class="kyc-form-container">
-                        <h2 style="margin-bottom: 2rem; color: var(--dark);">Make a Deposit</h2>
+                        <h2 style="margin-bottom: 1.5rem; color: var(--dark);">Make a Deposit</h2>
+                        <div id="deposit-converter" class="currency-converter">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <strong>Conversion:</strong>
+                                    <div style="font-size: 0.9rem; color: var(--gray);">1 Chinese Yuan (¥) = 2 Ghana Cedis (GH₵)</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-weight: bold;" id="conversion-result">¥0 = GH₵0</div>
+                                </div>
+                            </div>
+                        </div>
                         <form id="deposit-form">
                             <div class="form-group">
-                                <label for="deposit-amount">Amount (USD)</label>
-                                <input type="number" id="deposit-amount" class="form-control" placeholder="Enter amount" min="10" required>
-                                <p style="margin-top: 0.5rem; color: var(--gray); font-size: 0.9rem;">Minimum deposit: $10</p>
+                                <label for="deposit-amount">Amount (¥ Chinese Yuan)</label>
+                                <input type="number" id="deposit-amount" class="form-control" placeholder="Enter amount in Yuan" min="100" step="100" required oninput="showCurrencyConversion(this.value, 'deposit')">
+                                <p style="margin-top: 0.5rem; color: var(--gray); font-size: 0.85rem;">Minimum deposit: ¥100 (≈ GH₵200)</p>
                             </div>
                             <div class="form-group">
                                 <label for="deposit-method">Payment Method</label>
                                 <select id="deposit-method" class="form-control" required>
                                     <option value="">Select method</option>
                                     <option value="bank-transfer">Bank Transfer</option>
+                                    <option value="mobile-money">Mobile Money (Ghana)</option>
                                     <option value="credit-card">Credit/Debit Card</option>
                                     <option value="crypto">Cryptocurrency</option>
-                                    <option value="mobile-money">Mobile Money</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -1894,24 +2333,39 @@
                     <div class="welcome-message">
                         <h1>Withdraw Funds</h1>
                         <p>Withdraw your earnings to your preferred payment method</p>
+                        <div class="conversion-notice">
+                            <i class="fas fa-info-circle"></i>
+                            Enter amount in Chinese Yuan (¥). The system automatically converts to Ghana Cedis (GH₵) at a rate of 1¥ = 2 GH₵.
+                        </div>
                     </div>
 
                     <div class="kyc-form-container">
-                        <h2 style="margin-bottom: 2rem; color: var(--dark);">Request Withdrawal</h2>
+                        <h2 style="margin-bottom: 1.5rem; color: var(--dark);">Request Withdrawal</h2>
+                        <div id="withdraw-converter" class="currency-converter">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <strong>Conversion:</strong>
+                                    <div style="font-size: 0.9rem; color: var(--gray);">1 Chinese Yuan (¥) = 2 Ghana Cedis (GH₵)</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-weight: bold;" id="withdraw-conversion-result">¥0 = GH₵0</div>
+                                </div>
+                            </div>
+                        </div>
                         <form id="withdraw-form">
                             <div class="form-group">
-                                <label for="withdraw-amount">Amount (USD)</label>
-                                <input type="number" id="withdraw-amount" class="form-control" placeholder="Enter amount" min="20" required>
-                                <p style="margin-top: 0.5rem; color: var(--gray); font-size: 0.9rem;">Available balance: <span id="withdraw-balance">$0.00</span></p>
-                                <p style="margin-top: 0.5rem; color: var(--gray); font-size: 0.9rem;">Minimum withdrawal: $20</p>
+                                <label for="withdraw-amount">Amount (¥ Chinese Yuan)</label>
+                                <input type="number" id="withdraw-amount" class="form-control" placeholder="Enter amount in Yuan" min="200" step="100" required oninput="showCurrencyConversion(this.value, 'withdraw')">
+                                <p style="margin-top: 0.5rem; color: var(--gray); font-size: 0.85rem;">Available balance: <span id="withdraw-balance">¥0.00</span> (≈ GH₵<span id="withdraw-balance-ghs">0.00</span>)</p>
+                                <p style="margin-top: 0.5rem; color: var(--gray); font-size: 0.85rem;">Minimum withdrawal: ¥200 (≈ GH₵400)</p>
                             </div>
                             <div class="form-group">
                                 <label for="withdraw-method">Withdrawal Method</label>
                                 <select id="withdraw-method" class="form-control" required>
                                     <option value="">Select method</option>
                                     <option value="bank-transfer">Bank Transfer</option>
+                                    <option value="mobile-money">Mobile Money (Ghana)</option>
                                     <option value="crypto">Cryptocurrency</option>
-                                    <option value="paypal">PayPal</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -1956,7 +2410,7 @@
                         <div id="kyc-step-content">
                             <!-- Step 1: Personal Info -->
                             <div class="kyc-form-container" id="kyc-step1">
-                                <h2 style="margin-bottom: 2rem; color: var(--dark);">Personal Information</h2>
+                                <h2 style="margin-bottom: 1.5rem; color: var(--dark);">Personal Information</h2>
                                 <form id="kyc-personal-form">
                                     <div class="form-group">
                                         <label for="kyc-fullname">Full Legal Name</label>
@@ -1982,7 +2436,7 @@
 
                             <!-- Step 2: ID Verification -->
                             <div class="kyc-form-container" id="kyc-step2" style="display: none;">
-                                <h2 style="margin-bottom: 2rem; color: var(--dark);">ID Document Verification</h2>
+                                <h2 style="margin-bottom: 1.5rem; color: var(--dark);">ID Document Verification</h2>
                                 <form id="kyc-id-form">
                                     <div class="form-group">
                                         <label for="kyc-id-type">ID Document Type</label>
@@ -2015,7 +2469,7 @@
                                             <input type="file" id="id-back-input" accept="image/*,.pdf" style="display: none;">
                                         </div>
                                     </div>
-                                    <div style="display: flex; gap: 1rem;">
+                                    <div style="display: flex; gap: 0.8rem;">
                                         <button type="button" class="btn" style="flex: 1;" onclick="prevKycStep(1)">
                                             Back
                                         </button>
@@ -2028,7 +2482,7 @@
 
                             <!-- Step 3: Address Proof -->
                             <div class="kyc-form-container" id="kyc-step3" style="display: none;">
-                                <h2 style="margin-bottom: 2rem; color: var(--dark);">Proof of Address</h2>
+                                <h2 style="margin-bottom: 1.5rem; color: var(--dark);">Proof of Address</h2>
                                 <form id="kyc-address-form">
                                     <div class="form-group">
                                         <label for="kyc-proof-type">Proof of Address Document</label>
@@ -2052,7 +2506,7 @@
                                         <label for="kyc-proof-notes">Additional Notes (Optional)</label>
                                         <textarea id="kyc-proof-notes" class="form-control" rows="3" placeholder="Any additional information"></textarea>
                                     </div>
-                                    <div style="display: flex; gap: 1rem;">
+                                    <div style="display: flex; gap: 0.8rem;">
                                         <button type="button" class="btn" style="flex: 1;" onclick="prevKycStep(2)">
                                             Back
                                         </button>
@@ -2065,14 +2519,14 @@
 
                             <!-- Step 4: Review -->
                             <div class="kyc-form-container" id="kyc-step4" style="display: none;">
-                                <h2 style="margin-bottom: 2rem; color: var(--dark);">Review & Submit</h2>
-                                <div style="background: var(--light); padding: 2rem; border-radius: 12px; margin-bottom: 2rem;">
-                                    <h3 style="color: var(--dark); margin-bottom: 1.5rem;">Please review your information</h3>
+                                <h2 style="margin-bottom: 1.5rem; color: var(--dark);">Review & Submit</h2>
+                                <div style="background: var(--light); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
+                                    <h3 style="color: var(--dark); margin-bottom: 1.2rem;">Please review your information</h3>
                                     <div id="kyc-review-content">
                                         <!-- Review content will be populated here -->
                                     </div>
                                 </div>
-                                <div style="display: flex; gap: 1rem;">
+                                <div style="display: flex; gap: 0.8rem;">
                                     <button type="button" class="btn" style="flex: 1;" onclick="prevKycStep(3)">
                                         Back
                                     </button>
@@ -2086,25 +2540,25 @@
                     </div>
                 </section>
 
-                <!-- Other sections (Referral, Support, Settings, Signout) -->
+                <!-- Referral Section -->
                 <section id="referral" class="section">
                     <div class="welcome-message">
                         <h1>Referral Program</h1>
                         <p>Earn rewards by inviting friends to join MACSUN ENERGIES</p>
                     </div>
                     <div class="kyc-form-container">
-                        <h2 style="margin-bottom: 2rem; color: var(--dark);">Your Referral Link</h2>
+                        <h2 style="margin-bottom: 1.5rem; color: var(--dark);">Your Referral Link</h2>
                         <div class="form-group">
-                            <div style="display: flex; gap: 10px; margin-bottom: 1.5rem;">
+                            <div style="display: flex; gap: 8px; margin-bottom: 1.2rem;">
                                 <input type="text" id="referral-link" class="form-control" value="https://macsun-energies.com/ref/USER123" readonly>
-                                <button type="button" class="btn btn-primary" onclick="copyReferralLink()">
+                                <button type="button" class="btn btn-primary" onclick="copyReferralLink()" style="width: auto; padding: 0 15px;">
                                     <i class="fas fa-copy"></i>
                                 </button>
                             </div>
                         </div>
                         <div class="form-group">
                             <p style="color: var(--dark); font-weight: 600; margin-bottom: 0.5rem;">How it works:</p>
-                            <ul style="color: var(--gray); margin-left: 1.5rem;">
+                            <ul style="color: var(--gray); margin-left: 1.2rem; font-size: 0.9rem;">
                                 <li>Share your referral link with friends</li>
                                 <li>Earn 10% commission on their first investment</li>
                                 <li>Earn 5% commission on their subsequent investments</li>
@@ -2114,13 +2568,90 @@
                     </div>
                 </section>
 
-                <section id="support" class="section">
+                <!-- About Us Section -->
+                <section id="about" class="section">
                     <div class="welcome-message">
-                        <h1>Support Center</h1>
-                        <p>Get help with your account and investments</p>
+                        <h1>About Macsun Energies</h1>
+                        <p>Leading the solar energy revolution in Africa</p>
+                    </div>
+                    
+                    <div class="about-content">
+                        <div class="about-header">
+                            <h2>Macsun Solar Energy Technology Co., Ltd.</h2>
+                        </div>
+                        
+                        <div class="about-description">
+                            <p>Macsun Solar Energy Technology Co., Ltd. is a premier Chinese manufacturer and global supplier of photovoltaic (PV) solar products, including advanced solar cells, high-efficiency panels, and integrated solar power systems for various applications like street lights, chargers, and power plants.</p>
+                            
+                            <p>As a subsidiary of the Ruixin Group, we focus on both OEM/ODM services and providing a wide range of renewable energy solutions. Our company specializes in advanced technologies like N-type Topcon cells and aims to deliver affordable clean energy globally.</p>
+                            
+                            <p>We are proud to operate as a Ghanaian-based Chinese company where users can generate solar energy with their mobile phones and also earn daily income. Our innovative platform allows users to participate in the solar energy revolution while earning sustainable returns on their investments.</p>
+                            
+                            <p>With operations across Africa, we're committed to bringing clean, affordable energy to communities while creating economic opportunities through our unique investment model that combines technology, sustainability, and financial empowerment.</p>
+                        </div>
+                        
+                        <div class="blog-grid">
+                            <div class="blog-card">
+                                <div class="blog-image">
+                                    <img src="https://images.unsplash.com/photo-1581094794329-c8112a89af12?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8Y2hpbmVzZSUyMGVuZ2luZWVyJTIwc29sYXJ8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=60" alt="Chinese Engineers">
+                                </div>
+                                <div class="blog-content">
+                                    <h3 class="blog-title">Our Technical Expertise</h3>
+                                    <p class="blog-text">Our team of Chinese engineers brings world-class solar technology to Africa, ensuring the highest efficiency and durability for all our solar products.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="blog-card">
+                                <div class="blog-image">
+                                    <img src="https://images.unsplash.com/photo-1551650975-87deedd944c3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8c29sYXIlMjBpbnN0YWxsYXRpb24lMjBnaGFuYXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60" alt="Solar Installation in Ghana">
+                                </div>
+                                <div class="blog-content">
+                                    <h3 class="blog-title">Ghana Operations</h3>
+                                    <p class="blog-text">Our team works closely with local communities in Ghana to install and maintain solar systems, creating jobs and sustainable energy solutions.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="blog-card">
+                                <div class="blog-image">
+                                    <img src="https://images.unsplash.com/photo-1533750349088-cd871a92f312?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8bW9iaWxlJTIwcGhvbmUlMjBzb2xhciUyMGFwcHxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60" alt="Mobile App">
+                                </div>
+                                <div class="blog-content">
+                                    <h3 class="blog-title">Mobile Energy Generation</h3>
+                                    <p class="blog-text">Our innovative mobile app allows users to monitor their solar investments, generate clean energy credits, and earn daily income from anywhere.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="blog-card">
+                                <div class="blog-image">
+                                    <img src="https://images.unsplash.com/photo-1586773860418-dc22f8b874bc?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fHNvbGFyJTIwZmFybSUyMGNoaW5lc2UlMjB3b3JrZXJzfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60" alt="Chinese and African Collaboration">
+                                </div>
+                                <div class="blog-content">
+                                    <h3 class="blog-title">Cross-Cultural Collaboration</h3>
+                                    <p class="blog-text">Chinese technical expertise combined with African market knowledge creates the perfect synergy for sustainable solar energy development.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Chat Admin Section (Renamed from Support) -->
+                <section id="chat-admin" class="section">
+                    <div class="welcome-message">
+                        <h1>Chat with Admin</h1>
+                        <p>Get instant help from our support team</p>
                     </div>
                     <div class="kyc-form-container">
-                        <h2 style="margin-bottom: 2rem; color: var(--dark);">Contact Support</h2>
+                        <h2 style="margin-bottom: 1.5rem; color: var(--dark);">Contact Admin Directly</h2>
+                        
+                        <div style="background: linear-gradient(135deg, var(--primary-light), var(--primary)); color: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; text-align: center;">
+                            <div style="font-size: 2rem; margin-bottom: 1rem;">
+                                <i class="fas fa-phone-alt"></i>
+                            </div>
+                            <h3 style="margin-bottom: 0.5rem;">Call or WhatsApp Admin</h3>
+                            <div style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem;">027 331 5392</div>
+                            <p style="opacity: 0.9; font-size: 0.9rem;">Available during working hours: Monday to Saturday, 9AM to 6PM</p>
+                        </div>
+                        
                         <form id="support-form">
                             <div class="form-group">
                                 <label for="support-subject">Subject</label>
@@ -2132,7 +2663,7 @@
                             </div>
                             <button type="submit" class="btn btn-primary btn-block">
                                 <i class="fas fa-paper-plane"></i>
-                                Send Message
+                                Send Message to Admin
                             </button>
                         </form>
                     </div>
@@ -2144,7 +2675,7 @@
                         <p>Manage your account preferences and security</p>
                     </div>
                     <div class="kyc-form-container">
-                        <h2 style="margin-bottom: 2rem; color: var(--dark);">Update Profile</h2>
+                        <h2 style="margin-bottom: 1.5rem; color: var(--dark);">Update Profile</h2>
                         <form id="settings-form">
                             <div class="form-group">
                                 <label for="settings-name">Full Name</label>
@@ -2176,8 +2707,8 @@
                         <p>We hope to see you again soon!</p>
                     </div>
                     <div class="kyc-form-container">
-                        <h2 style="margin-bottom: 2rem; color: var(--dark);">Confirm Sign Out</h2>
-                        <p style="margin-bottom: 2rem; color: var(--gray);">Your investments will continue to earn while you're away.</p>
+                        <h2 style="margin-bottom: 1.5rem; color: var(--dark);">Confirm Sign Out</h2>
+                        <p style="margin-bottom: 1.5rem; color: var(--gray);">Your investments will continue to earn while you're away.</p>
                         <button type="button" class="btn btn-primary btn-block" onclick="signOutUser()">
                             <i class="fas fa-sign-out-alt"></i>
                             Sign Out
@@ -2192,6 +2723,7 @@
         let currentUser = null;
         let userData = null;
         let currentKycStep = 1;
+        const CNY_TO_GHS_RATE = 2; // 1 Chinese Yuan = 2 Ghana Cedis
 
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
@@ -2286,6 +2818,22 @@
             // Initialize platform status
             updatePlatformStatus();
             setInterval(updatePlatformStatus, 60000);
+            
+            // Set up deposit amount listener for conversion
+            const depositAmountInput = document.getElementById('deposit-amount');
+            if (depositAmountInput) {
+                depositAmountInput.addEventListener('focus', function() {
+                    document.getElementById('deposit-converter').style.display = 'block';
+                });
+            }
+            
+            // Set up withdraw amount listener for conversion
+            const withdrawAmountInput = document.getElementById('withdraw-amount');
+            if (withdrawAmountInput) {
+                withdrawAmountInput.addEventListener('focus', function() {
+                    document.getElementById('withdraw-converter').style.display = 'block';
+                });
+            }
         }
 
         function switchSection(sectionId) {
@@ -2305,6 +2853,30 @@
                     loadMyInvestments();
                     break;
             }
+        }
+
+        // Currency conversion functions
+        function showCurrencyConversion(yuanAmount, type) {
+            if (!yuanAmount || yuanAmount < 0) {
+                yuanAmount = 0;
+            }
+            
+            const ghsAmount = yuanAmount * CNY_TO_GHS_RATE;
+            
+            if (type === 'deposit') {
+                document.getElementById('conversion-result').textContent = `¥${yuanAmount} = GH₵${ghsAmount.toFixed(2)}`;
+            } else if (type === 'withdraw') {
+                document.getElementById('withdraw-conversion-result').textContent = `¥${yuanAmount} = GH₵${ghsAmount.toFixed(2)}`;
+            }
+        }
+
+        function formatCurrency(amount, currency = 'CNY') {
+            if (currency === 'CNY') {
+                return `¥${amount.toFixed(2)}`;
+            } else if (currency === 'GHS') {
+                return `GH₵${amount.toFixed(2)}`;
+            }
+            return `$${amount.toFixed(2)}`;
         }
 
         async function initFirebaseAuth() {
@@ -2468,9 +3040,11 @@
                     country: country,
                     createdAt: new Date().toISOString(),
                     balance: 0,
+                    balanceGHS: 0,
                     kycStatus: 'not_verified',
                     referralCode: generateReferralCode(),
-                    level: 'basic'
+                    level: 'basic',
+                    currency: 'CNY'
                 });
 
                 // Send verification email
@@ -2522,9 +3096,11 @@
                         country: '',
                         createdAt: new Date().toISOString(),
                         balance: 0,
+                        balanceGHS: 0,
                         kycStatus: 'not_verified',
                         referralCode: generateReferralCode(),
-                        level: 'basic'
+                        level: 'basic',
+                        currency: 'CNY'
                     });
                 }
                 
@@ -2543,6 +3119,8 @@
                     userId: uid,
                     type: 'account_creation',
                     amount: 0,
+                    amountGHS: 0,
+                    currency: 'CNY',
                     status: 'completed',
                     description: 'Account created',
                     timestamp: new Date().toISOString(),
@@ -2601,9 +3179,9 @@
                 kycBadge.style.color = 'var(--danger)';
             }
             
-            // Update dashboard
+            // Update dashboard with CNY currency
             document.getElementById('dashboard-welcome').textContent = `Welcome back, ${userData.name}!`;
-            document.getElementById('total-balance').textContent = `$${userData.balance?.toFixed(2) || '0.00'}`;
+            document.getElementById('total-balance').textContent = `¥${userData.balance?.toFixed(2) || '0.00'}`;
             
             // Update settings form
             document.getElementById('settings-name').value = userData.name;
@@ -2613,8 +3191,10 @@
             // Update referral link
             document.getElementById('referral-link').value = `https://macsun-energies.com/ref/${userData.referralCode}`;
             
-            // Update withdraw balance
-            document.getElementById('withdraw-balance').textContent = `$${userData.balance?.toFixed(2) || '0.00'}`;
+            // Update withdraw balance with both CNY and GHS
+            const balanceGHS = userData.balanceGHS || (userData.balance * CNY_TO_GHS_RATE) || 0;
+            document.getElementById('withdraw-balance').textContent = `¥${userData.balance?.toFixed(2) || '0.00'}`;
+            document.getElementById('withdraw-balance-ghs').textContent = balanceGHS.toFixed(2);
             
             // Load additional data
             loadDashboardData();
@@ -2656,11 +3236,12 @@
                     `;
                 } else {
                     recentTransactions.slice(0, 5).forEach(transaction => {
+                        const amountDisplay = transaction.currency === 'CNY' ? `¥${transaction.amount.toFixed(2)}` : `$${transaction.amount.toFixed(2)}`;
                         const row = document.createElement('tr');
                         row.innerHTML = `
                             <td>${new Date(transaction.timestamp).toLocaleDateString()}</td>
                             <td>${transaction.type}</td>
-                            <td>$${transaction.amount.toFixed(2)}</td>
+                            <td>${amountDisplay}</td>
                             <td><span class="status-badge status-${transaction.status}">${transaction.status}</span></td>
                             <td>${transaction.description}</td>
                         `;
@@ -2707,11 +3288,12 @@
                     `;
                 } else {
                     transactions.forEach(transaction => {
+                        const amountDisplay = transaction.currency === 'CNY' ? `¥${transaction.amount.toFixed(2)}` : `$${transaction.amount.toFixed(2)}`;
                         const row = document.createElement('tr');
                         row.innerHTML = `
                             <td>${new Date(transaction.timestamp).toLocaleString()}</td>
                             <td>${transaction.type}</td>
-                            <td>$${transaction.amount.toFixed(2)}</td>
+                            <td>${amountDisplay}</td>
                             <td><span class="status-badge status-${transaction.status}">${transaction.status}</span></td>
                             <td>${transaction.reference || 'N/A'}</td>
                             <td>${transaction.description}</td>
@@ -2757,17 +3339,17 @@
                     `;
                 } else {
                     investments.forEach(investment => {
-                        const totalEarned = investment.amount * (investment.dailyReturn / 100) * 
-                            Math.floor((new Date() - new Date(investment.startDate)) / (1000 * 60 * 60 * 24));
+                        const daysPassed = Math.floor((new Date() - new Date(investment.startDate)) / (1000 * 60 * 60 * 24));
+                        const totalEarned = investment.amount * (investment.dailyReturn / 100) * Math.min(daysPassed, 60);
                         
                         const row = document.createElement('tr');
                         row.innerHTML = `
                             <td>${investment.packageName}</td>
-                            <td>$${investment.amount.toFixed(2)}</td>
+                            <td>¥${investment.amount.toFixed(2)}</td>
                             <td>${new Date(investment.startDate).toLocaleDateString()}</td>
                             <td>${new Date(investment.endDate).toLocaleDateString()}</td>
-                            <td>$${(investment.amount * (investment.dailyReturn / 100)).toFixed(2)}</td>
-                            <td>$${totalEarned.toFixed(2)}</td>
+                            <td>¥${(investment.amount * (investment.dailyReturn / 100)).toFixed(2)}</td>
+                            <td>¥${totalEarned.toFixed(2)}</td>
                             <td><span class="status-badge status-completed">Active</span></td>
                         `;
                         tbody.appendChild(row);
@@ -2806,10 +3388,13 @@
             
             if (!currentUser || !userData) return;
             
-            if (amount < 10) {
-                showToast('Minimum deposit is $10', 'error');
+            if (amount < 100) {
+                showToast('Minimum deposit is ¥100 (≈ GH₵200)', 'error');
                 return;
             }
+            
+            // Calculate GHS equivalent
+            const amountGHS = amount * CNY_TO_GHS_RATE;
             
             try {
                 // Create transaction record
@@ -2817,6 +3402,8 @@
                     userId: currentUser.uid,
                     type: 'deposit',
                     amount: amount,
+                    amountGHS: amountGHS,
+                    currency: 'CNY',
                     status: 'pending',
                     method: method,
                     description: `Deposit via ${method}` + (notes ? ` - ${notes}` : ''),
@@ -2824,8 +3411,9 @@
                     reference: 'DEP-' + Date.now()
                 });
                 
-                showToast('Deposit request submitted successfully! It will be processed within 24 hours.', 'success');
+                showToast(`Deposit request submitted for ¥${amount} (≈ GH₵${amountGHS})! It will be processed within 24 hours.`, 'success');
                 document.getElementById('deposit-form').reset();
+                document.getElementById('deposit-converter').style.display = 'none';
                 
                 // Refresh data
                 loadDashboardData();
@@ -2842,8 +3430,8 @@
             
             if (!currentUser || !userData) return;
             
-            if (amount < 20) {
-                showToast('Minimum withdrawal is $20', 'error');
+            if (amount < 200) {
+                showToast('Minimum withdrawal is ¥200 (≈ GH₵400)', 'error');
                 return;
             }
             
@@ -2852,12 +3440,17 @@
                 return;
             }
             
+            // Calculate GHS equivalent
+            const amountGHS = amount * CNY_TO_GHS_RATE;
+            
             try {
                 // Create transaction record
                 await window.firestore.addDoc(window.firestore.collection(window.db, 'transactions'), {
                     userId: currentUser.uid,
                     type: 'withdrawal',
                     amount: amount,
+                    amountGHS: amountGHS,
+                    currency: 'CNY',
                     status: 'pending',
                     method: method,
                     description: `Withdrawal to ${method}`,
@@ -2866,8 +3459,9 @@
                     accountDetails: accountDetails
                 });
                 
-                showToast('Withdrawal request submitted successfully! Processing time: 24-48 hours.', 'success');
+                showToast(`Withdrawal request submitted for ¥${amount} (≈ GH₵${amountGHS})! Processing time: 24-48 hours.`, 'success');
                 document.getElementById('withdraw-form').reset();
+                document.getElementById('withdraw-converter').style.display = 'none';
                 
                 // Refresh data
                 loadDashboardData();
@@ -3134,26 +3728,53 @@
 
         function updatePlatformStatus() {
             const now = new Date();
+            const day = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+            const hour = now.getHours();
+            const minute = now.getMinutes();
+            
             const statusIndicator = document.getElementById('status-indicator');
             const statusText = document.getElementById('platform-status-text');
             
-            // Platform is always open
-            statusIndicator.className = 'status-indicator status-open';
-            statusText.textContent = 'Trading Active • 24/7';
+            // Check if within working hours: Monday to Saturday (1-6), 9AM to 6PM
+            const isWorkingDay = day >= 1 && day <= 6; // Monday to Saturday
+            const isWorkingHour = hour >= 9 && hour < 18;
+            
+            if (isWorkingDay && isWorkingHour) {
+                statusIndicator.className = 'status-indicator status-open';
+                // Calculate time until closing
+                const closeHour = 18;
+                const hoursLeft = closeHour - hour - (minute > 0 ? 1 : 0);
+                const minutesLeft = 60 - minute;
+                statusText.textContent = `Open • Closes in ${hoursLeft}h ${minutesLeft}m`;
+            } else {
+                statusIndicator.className = 'status-indicator status-closed';
+                
+                // Calculate time until next opening
+                let daysUntilOpen = 0;
+                let nextOpenHour = 9;
+                
+                if (day === 0) { // Sunday
+                    daysUntilOpen = 1; // Next Monday
+                } else if (day === 6 && hour >= 18) { // Saturday after 6PM
+                    daysUntilOpen = 2; // Next Monday
+                } else if (hour < 9) { // Before 9AM on a working day
+                    nextOpenHour = 9;
+                } else if (hour >= 18) { // After 6PM on a working day
+                    daysUntilOpen = 1;
+                    nextOpenHour = 9;
+                }
+                
+                if (daysUntilOpen > 0) {
+                    statusText.textContent = `Closed • Opens ${daysUntilOpen === 1 ? 'tomorrow' : 'Monday'} at 9AM`;
+                } else {
+                    const hoursUntilOpen = nextOpenHour - hour;
+                    const minutesUntilOpen = 60 - minute;
+                    statusText.textContent = `Closed • Opens in ${hoursUntilOpen}h ${minutesUntilOpen}m`;
+                }
+            }
         }
 
-        function generateReferralCode() {
-            return 'MACSUN-' + Math.random().toString(36).substr(2, 8).toUpperCase();
-        }
-
-        function copyReferralLink() {
-            const link = document.getElementById('referral-link');
-            navigator.clipboard.writeText(link.value).then(() => {
-                showToast('Referral link copied to clipboard!', 'success');
-            });
-        }
-
-        async function investPackage(packageName, amount) {
+        async function investPackage(packageName, amount, dailyReturn) {
             if (!currentUser) {
                 showToast('Please sign in to invest', 'error');
                 switchSection('signout');
@@ -3173,26 +3794,8 @@
             }
             
             try {
-                // Calculate investment details based on package
-                let dailyReturn, contractDays;
-                switch(packageName) {
-                    case 'Home Solar Starter':
-                        dailyReturn = 1.5;
-                        contractDays = 30;
-                        break;
-                    case 'Commercial Solar Pro':
-                        dailyReturn = 2.0;
-                        contractDays = 45;
-                        break;
-                    case 'Industrial Solar Plus':
-                        dailyReturn = 2.5;
-                        contractDays = 60;
-                        break;
-                    default:
-                        dailyReturn = 1.5;
-                        contractDays = 30;
-                }
-                
+                // Calculate investment details
+                const contractDays = 60;
                 const startDate = new Date();
                 const endDate = new Date(startDate.getTime() + contractDays * 24 * 60 * 60 * 1000);
                 
@@ -3205,30 +3808,36 @@
                     startDate: startDate.toISOString(),
                     endDate: endDate.toISOString(),
                     status: 'active',
-                    createdAt: new Date().toISOString()
+                    createdAt: new Date().toISOString(),
+                    currency: 'CNY'
                 });
                 
                 // Update user balance
                 const newBalance = userData.balance - amount;
+                const newBalanceGHS = newBalance * CNY_TO_GHS_RATE;
                 await window.firestore.updateDoc(window.firestore.doc(window.db, 'users', currentUser.uid), {
-                    balance: newBalance
+                    balance: newBalance,
+                    balanceGHS: newBalanceGHS
                 });
                 
                 // Update userData
                 userData.balance = newBalance;
+                userData.balanceGHS = newBalanceGHS;
                 
                 // Create transaction record
                 await window.firestore.addDoc(window.firestore.collection(window.db, 'transactions'), {
                     userId: currentUser.uid,
                     type: 'investment',
                     amount: amount,
+                    amountGHS: amount * CNY_TO_GHS_RATE,
+                    currency: 'CNY',
                     status: 'completed',
                     description: `Invested in ${packageName}`,
                     timestamp: new Date().toISOString(),
                     reference: 'INV-' + Date.now()
                 });
                 
-                showToast(`Successfully invested $${amount} in ${packageName}!`, 'success');
+                showToast(`Successfully invested ¥${amount} (≈ GH₵${(amount * CNY_TO_GHS_RATE).toFixed(2)}) in ${packageName}!`, 'success');
                 
                 // Refresh data
                 updateUIWithUserData();
@@ -3238,6 +3847,17 @@
             } catch (error) {
                 showToast('Error processing investment: ' + error.message, 'error');
             }
+        }
+
+        function generateReferralCode() {
+            return 'MACSUN-' + Math.random().toString(36).substr(2, 8).toUpperCase();
+        }
+
+        function copyReferralLink() {
+            const link = document.getElementById('referral-link');
+            navigator.clipboard.writeText(link.value).then(() => {
+                showToast('Referral link copied to clipboard!', 'success');
+            });
         }
 
         function showAuthMessage(message, type = 'error', formType = 'login') {
